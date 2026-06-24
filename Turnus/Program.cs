@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("TurnusContext") ?? throw new InvalidOperationException("Connection string 'TurnusContext' not found.");
+
+builder.Services.AddDbContext<TurnusContext>(options => options.UseSqlServer(connectionString));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
