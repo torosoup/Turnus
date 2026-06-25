@@ -1,5 +1,6 @@
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
@@ -39,6 +40,7 @@ public class ScheduledEventsController : Controller
     // GET: SCHEDULEDEVENTS/Create
     public IActionResult Create()
     {
+        ViewData["EventTemplateId"] = new SelectList(_context.EventTemplate, "Id", "Name");
         return View();
     }
 
