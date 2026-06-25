@@ -1,0 +1,57 @@
+@model IEnumerable<Turnus.Models.ScheduledEvent>
+
+@{
+    ViewData["Title"] = "My Availability";
+    var myAvailability = ViewBag.MyAvailability as List<Turnus.Models.Availability>;
+}
+
+<h1>My Availability</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Event</th>
+            <th>Date</th>
+            <th>Shift</th>
+            <th>Your status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var existing = myAvailability?.FirstOrDefault(a => a.ScheduledEventId == item.Id);
+            <tr>
+                <td>@item.EventTemplate?.Name</td>
+                <td>@item.Date.ToShortDateString()</td>
+                <td>@item.ShiftStart - @item.ShiftEnd</td>
+                <td>
+                    @if (existing == null)
+                    {
+                        <span class="text-muted">Not responded</span>
+                    }
+                    else if (existing.IsAvailable)
+                    {
+                        <span class="text-success">Available</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Unavailable</span>
+                    }
+                </td>
+                <td>
+                    <form asp-action="SetAvailability" method="post" class="d-inline">
+                        <input type="hidden" name="scheduledEventId" value="@item.Id" />
+                        <input type="hidden" name="isAvailable" value="true" />
+                        <button type="submit" class="btn btn-sm btn-success">Available</button>
+                    </form>
+                    <form asp-action="SetAvailability" method="post" class="d-inline">
+                        <input type="hidden" name="scheduledEventId" value="@item.Id" />
+                        <input type="hidden" name="isAvailable" value="false" />
+                        <button type="submit" class="btn btn-sm btn-danger">Unavailable</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
