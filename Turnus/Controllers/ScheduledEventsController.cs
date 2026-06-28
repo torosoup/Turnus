@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,9 @@ public class ScheduledEventsController : Controller
     // GET: SCHEDULEDEVENTS
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.ScheduledEvent.ToListAsync());
+        return View(await _context.ScheduledEvent
+            .Include(s => s.EventTemplate)
+            .ToListAsync());
     }
 
     // GET: SCHEDULEDEVENTS/Details/5
@@ -73,6 +76,8 @@ public class ScheduledEventsController : Controller
         {
             return NotFound();
         }
+
+        ViewData["EventTemplateId"] = new SelectList(_context.EventTemplate, "Id", "Name", scheduledevent.EventTemplateId);
         return View(scheduledevent);
     }
 
@@ -148,4 +153,34 @@ public class ScheduledEventsController : Controller
     {
         return _context.ScheduledEvent.Any(e => e.Id == id);
     }
+
+    [Authorize]
+    public async Task<IActionResult> Review(int id)
+    {
+        var scheduledEvent = await _context.ScheduledEvent
+            .Include(s => s.EventTemplate)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (scheduledEvent == null)
+        {
+            return NotFound();
+        }
+
+        var requiredRoles = await _context.EventTemplateRole
+            .Where(etr => etr.EventTemplateId == scheduledEvent.EventTemplateId)
+            .Include(etr => etr.Role)
+            .ToListAsync();
+
+        var availableEmployees = await _context.Availability
+            .Where(a => a.ScheduledEventId == id && a.IsAvailable)
+            .Include(a => a.Employee)
+            .ToListAsync();
+
+        ViewBag.RequiredRoles = requiredRoles;
+        ViewBag.AvailableEmployees = availableEmployees;
+
+        return View(scheduledEvent);
+    }
 }
+
+
