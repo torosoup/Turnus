@@ -1,0 +1,50 @@
+﻿@model Turnus.Models.ScheduledEvent
+
+@{
+    ViewData["Title"] = "Review Availability";
+    var requiredRoles = ViewBag.RequiredRoles as List<Turnus.Models.EventTemplateRole>;
+    var availableEmployees = ViewBag.AvailableEmployees as List<Turnus.Models.Availability>;
+}
+
+<h1>Review Availability</h1>
+
+<h4>@Model.EventTemplate?.Name — @Model.Date.ToShortDateString() (@Model.ShiftStart - @Model.ShiftEnd)</h4>
+<hr />
+
+<h5>Required roles</h5>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Role</th>
+            <th>Required count</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var rr in requiredRoles ?? new())
+        {
+            <tr>
+                <td>@rr.Role?.Name</td>
+                <td>@rr.RequiredCount</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h5>Available employees</h5>
+@if (availableEmployees == null || !availableEmployees.Any())
+{
+    <p class="text-muted">No one has marked themselves available yet.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var a in availableEmployees)
+        {
+            <li class="list-group-item">@a.Employee?.FullName (@a.Employee?.Email)</li>
+        }
+    </ul>
+}
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
