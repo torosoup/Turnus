@@ -1,0 +1,100 @@
+﻿@model Turnus.Models.ScheduledDay
+
+@{
+    ViewData["Title"] = "Review Staffing";
+    var requirements = ViewBag.Requirements as List<Turnus.Models.VenueStaffingRequirement>;
+    var availability = ViewBag.Availability as List<Turnus.Models.Availability>;
+
+    var dayScoped = requirements?.Where(r => !r.IsShiftScoped).ToList() ?? new();
+    var shiftScoped = requirements?.Where(r => r.IsShiftScoped).ToList() ?? new();
+}
+
+<h1>Review Staffing</h1>
+<h4>@Model.Venue?.Name — @Model.Date.ToShortDateString()</h4>
+<hr />
+
+<h5>Day-wide roles</h5>
+@if (!dayScoped.Any())
+{
+    <p class="text-muted">No day-wide roles required for this venue.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Required</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var req in dayScoped)
+            {
+                <tr>
+                    <td>@req.Role?.Name</td>
+                    <td>@req.RequiredCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="text-muted">Note: availability tracking for day-wide roles isn't built yet — assign manually for now.</p>
+}
+
+<h5>Per-shift roles</h5>
+@if (!Model.ScheduledShifts.Any())
+{
+    <p class="text-muted">No shifts have been scheduled for this day yet.</p>
+}
+else
+{
+    @foreach (var shift in Model.ScheduledShifts)
+    {
+        <div class="mb-4">
+            <h6>@shift.ShiftDefinition?.Name (@shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime)</h6>
+
+            @if (!shiftScoped.Any())
+            {
+                <p class="text-muted">No per-shift roles required for this venue.</p>
+            }
+            else
+            {
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Required</th>
+                            <th>Available employees</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in shiftScoped)
+                        {
+                            var availableForThisShift = availability?
+                                .Where(a => a.ScheduledShiftId == shift.Id)
+                                .ToList() ?? new();
+
+                            <tr>
+                                <td>@req.Role?.Name</td>
+                                <td>@req.RequiredCount</td>
+                                <td>
+                                    @if (!availableForThisShift.Any())
+                                    {
+                                        <span class="text-muted">No one available yet</span>
+                                    }
+                                    else
+                                    {
+                                        @string.Join(", ", availableForThisShift.Select(a => a.Employee?.Email))
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+}
+
+<div>
+    <a asp-controller="ScheduledDays" asp-action="Index">Back to Scheduled Days</a>
+</div>
