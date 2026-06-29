@@ -3,9 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Turnus.Models
 {
-    public class Availability
+    public class DayAssignment
     {
         public int Id { get; set; }
+
+        [Required]
+        public int ScheduledDayId { get; set; }
+
+        [ForeignKey("ScheduledDayId")]
+        public ScheduledDay? ScheduledDay { get; set; }
 
         [Required]
         public string EmployeeId { get; set; } = string.Empty;
@@ -14,12 +20,9 @@ namespace Turnus.Models
         public ApplicationUser? Employee { get; set; }
 
         [Required]
-        public int ScheduledShiftId { get; set; }
+        public int RoleId { get; set; }
 
-        [ForeignKey("ScheduledShiftId")]
-        public ScheduledShift? ScheduledShift { get; set; }
-
-        [Required]
-        public bool IsAvailable { get; set; }
+        [ForeignKey("RoleId")]
+        public Role? Role { get; set; }
     }
 }

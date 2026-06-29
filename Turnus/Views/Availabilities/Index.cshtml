@@ -1,4 +1,4 @@
-@model IEnumerable<Turnus.Models.ScheduledEvent>
+@model IEnumerable<Turnus.Models.ScheduledShift>
 
 @{
     ViewData["Title"] = "My Availability";
@@ -10,7 +10,7 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Event</th>
+            <th>Venue</th>
             <th>Date</th>
             <th>Shift</th>
             <th>Your status</th>
@@ -20,11 +20,11 @@
     <tbody>
         @foreach (var item in Model)
         {
-            var existing = myAvailability?.FirstOrDefault(a => a.ScheduledEventId == item.Id);
+            var existing = myAvailability?.FirstOrDefault(a => a.ScheduledShiftId == item.Id);
             <tr>
-                <td>@item.EventTemplate?.Name</td>
-                <td>@item.Date.ToShortDateString()</td>
-                <td>@item.ShiftStart - @item.ShiftEnd</td>
+                <td>@item.ScheduledDay?.Venue?.Name</td>
+                <td>@item.ScheduledDay?.Date.ToShortDateString()</td>
+                <td>@item.ShiftDefinition?.Name (@item.ShiftDefinition?.StartTime - @item.ShiftDefinition?.EndTime)</td>
                 <td>
                     @if (existing == null)
                     {
@@ -41,12 +41,12 @@
                 </td>
                 <td>
                     <form asp-action="SetAvailability" method="post" class="d-inline">
-                        <input type="hidden" name="scheduledEventId" value="@item.Id" />
+                        <input type="hidden" name="scheduledShiftId" value="@item.Id" />
                         <input type="hidden" name="isAvailable" value="true" />
                         <button type="submit" class="btn btn-sm btn-success">Available</button>
                     </form>
                     <form asp-action="SetAvailability" method="post" class="d-inline">
-                        <input type="hidden" name="scheduledEventId" value="@item.Id" />
+                        <input type="hidden" name="scheduledShiftId" value="@item.Id" />
                         <input type="hidden" name="isAvailable" value="false" />
                         <button type="submit" class="btn btn-sm btn-danger">Unavailable</button>
                     </form>

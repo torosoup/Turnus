@@ -4,61 +4,66 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
-[Authorize]
-public class AvailabilitiesController : Controller
+namespace Turnus.Controllers
 {
-    private readonly TurnusContext _context;
-    private readonly UserManager<ApplicationUser> _userManager;
-
-    public AvailabilitiesController(TurnusContext context, UserManager<ApplicationUser> userManager)
+    [Authorize]
+    public class AvailabilitiesController : Controller
     {
-        _context = context;
-        _userManager = userManager;
-    }
+        private readonly TurnusContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-    // GET: shows upcoming scheduled events and the user's current availability status
-    public async Task<IActionResult> Index()
-    {
-        var userId = _userManager.GetUserId(User);
-
-        var scheduledEvents = await _context.ScheduledEvent
-            .Include(s => s.EventTemplate)
-            .ToListAsync();
-
-        var myAvailability = await _context.Availability
-            .Where(a => a.EmployeeId == userId)
-            .ToListAsync();
-
-        ViewBag.MyAvailability = myAvailability;
-
-        return View(scheduledEvents);
-    }
-
-    // POST: sets or updates the logged-in employee's availability for a scheduled event
-    [HttpPost]
-    public async Task<IActionResult> SetAvailability(int scheduledEventId, bool isAvailable)
-    {
-        var userId = _userManager.GetUserId(User);
-
-        var existing = await _context.Availability
-            .FirstOrDefaultAsync(a => a.EmployeeId == userId && a.ScheduledEventId == scheduledEventId);
-
-        if (existing != null)
+        public AvailabilitiesController(TurnusContext context, UserManager<ApplicationUser> userManager)
         {
-            existing.IsAvailable = isAvailable;
+            _context = context;
+            _userManager = userManager;
         }
-        else
+
+        // GET: Availabilities
+        public async Task<IActionResult> Index()
         {
-            _context.Availability.Add(new Availability
+            var userId = _userManager.GetUserId(User);
+
+            var scheduledShifts = await _context.ScheduledShift
+                .Include(s => s.ShiftDefinition)
+                .Include(s => s.ScheduledDay)
+                    .ThenInclude(d => d!.Venue)
+                .ToListAsync();
+
+            var myAvailability = await _context.Availability
+                .Where(a => a.EmployeeId == userId)
+                .ToListAsync();
+
+            ViewBag.MyAvailability = myAvailability;
+
+            return View(scheduledShifts);
+        }
+
+        // POST: Availabilities/SetAvailability
+        [HttpPost]
+        public async Task<IActionResult> SetAvailability(int scheduledShiftId, bool isAvailable)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var existing = await _context.Availability
+                .FirstOrDefaultAsync(a => a.EmployeeId == userId && a.ScheduledShiftId == scheduledShiftId);
+
+            if (existing != null)
             {
-                EmployeeId = userId!,
-                ScheduledEventId = scheduledEventId,
-                IsAvailable = isAvailable
-            });
+                existing.IsAvailable = isAvailable;
+            }
+            else
+            {
+                _context.Availability.Add(new Availability
+                {
+                    EmployeeId = userId!,
+                    ScheduledShiftId = scheduledShiftId,
+                    IsAvailable = isAvailable
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
-
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
     }
 }
