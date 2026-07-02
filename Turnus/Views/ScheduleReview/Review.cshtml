@@ -4,6 +4,8 @@
     ViewData["Title"] = "Review Staffing";
     var requirements = ViewBag.Requirements as List<Turnus.Models.VenueStaffingRequirement>;
     var availability = ViewBag.Availability as List<Turnus.Models.Availability>;
+    var shiftAssignments = ViewBag.ShiftAssignments as List<Turnus.Models.ShiftAssignment>;
+    var dayAssignments = ViewBag.DayAssignments as List<Turnus.Models.DayAssignment>;
 
     var dayScoped = requirements?.Where(r => !r.IsShiftScoped).ToList() ?? new();
     var shiftScoped = requirements?.Where(r => r.IsShiftScoped).ToList() ?? new();
@@ -20,24 +22,42 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Role</th>
-                <th>Required</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var req in dayScoped)
+    @foreach (var req in dayScoped)
+    {
+        var assignedForThisRole = dayAssignments?
+            .Where(a => a.RoleId == req.RoleId)
+            .ToList() ?? new();
+
+        <div class="mb-3">
+            <strong>@req.Role?.Name</strong> (need @req.RequiredCount, assigned: @assignedForThisRole.Count)
+
+            @if (assignedForThisRole.Any())
             {
-                <tr>
-                    <td>@req.Role?.Name</td>
-                    <td>@req.RequiredCount</td>
-                </tr>
+                <ul>
+                    @foreach (var a in assignedForThisRole)
+                    {
+                        <li>@a.Employee?.Email</li>
+                    }
+                </ul>
             }
-        </tbody>
-    </table>
-    <p class="text-muted">Note: availability tracking for day-wide roles isn't built yet — assign manually for now.</p>
+
+            <form asp-action="AssignDay" method="post" class="form-inline">
+                <input type="hidden" name="scheduledDayId" value="@Model.Id" />
+                <input type="hidden" name="roleId" value="@req.RoleId" />
+                <select name="employeeId" class="form-control form-control-sm d-inline" style="width:auto;">
+                    <option value="">-- pick employee --</option>
+                    @* No self-service availability exists yet for day-wide roles,
+                       so this is currently a manual entry — list all registered users *@
+                    @foreach (var emp in ViewBag.AllEmployees as List<Turnus.Models.ApplicationUser> ?? new())
+                    {
+                        <option value="@emp.Id">@emp.Email</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+            </form>
+        </div>
+    }
+    <p class="text-muted">Note: availability tracking for day-wide roles isn't built yet — pick manually from all registered users.</p>
 }
 
 <h5>Per-shift roles</h5>
@@ -58,38 +78,51 @@ else
             }
             else
             {
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Role</th>
-                            <th>Required</th>
-                            <th>Available employees</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var req in shiftScoped)
-                        {
-                            var availableForThisShift = availability?
-                                .Where(a => a.ScheduledShiftId == shift.Id)
-                                .ToList() ?? new();
+                @foreach (var req in shiftScoped)
+                {
+                    var availableForThisShift = availability?
+                        .Where(a => a.ScheduledShiftId == shift.Id)
+                        .ToList() ?? new();
 
-                            <tr>
-                                <td>@req.Role?.Name</td>
-                                <td>@req.RequiredCount</td>
-                                <td>
-                                    @if (!availableForThisShift.Any())
-                                    {
-                                        <span class="text-muted">No one available yet</span>
-                                    }
-                                    else
-                                    {
-                                        @string.Join(", ", availableForThisShift.Select(a => a.Employee?.Email))
-                                    }
-                                </td>
-                            </tr>
+                    var assignedForThisShiftRole = shiftAssignments?
+                        .Where(a => a.ScheduledShiftId == shift.Id && a.RoleId == req.RoleId)
+                        .ToList() ?? new();
+
+                    <div class="mb-3">
+                        <strong>@req.Role?.Name</strong> (need @req.RequiredCount, assigned: @assignedForThisShiftRole.Count)
+
+                        @if (assignedForThisShiftRole.Any())
+                        {
+                            <ul>
+                                @foreach (var a in assignedForThisShiftRole)
+                                {
+                                    <li>@a.Employee?.Email (assigned)</li>
+                                }
+                            </ul>
                         }
-                    </tbody>
-                </table>
+
+                        @if (!availableForThisShift.Any())
+                        {
+                            <p class="text-muted">No one available yet.</p>
+                        }
+                        else
+                        {
+                            @foreach (var avail in availableForThisShift)
+                            {
+                                var isAlreadyAssigned = assignedForThisShiftRole.Any(a => a.EmployeeId == avail.EmployeeId);
+
+                                <form asp-action="AssignShift" method="post" class="d-inline">
+                                    <input type="hidden" name="scheduledShiftId" value="@shift.Id" />
+                                    <input type="hidden" name="employeeId" value="@avail.EmployeeId" />
+                                    <input type="hidden" name="roleId" value="@req.RoleId" />
+                                    <button type="submit" class="btn btn-sm @(isAlreadyAssigned ? "btn-secondary" : "btn-success")" @(isAlreadyAssigned ? "disabled" : "")>
+                                        @(isAlreadyAssigned ? "Assigned: " : "Assign: ")@avail.Employee?.Email
+                                    </button>
+                                </form>
+                            }
+                        }
+                    </div>
+                }
             }
         </div>
     }

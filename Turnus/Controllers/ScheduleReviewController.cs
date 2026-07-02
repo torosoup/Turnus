@@ -41,10 +41,70 @@ namespace Turnus.Controllers
                 .Include(a => a.ScheduledShift)
                 .ToListAsync();
 
+            var shiftAssignments = await _context.ShiftAssignment
+                .Where(a => shiftIds.Contains(a.ScheduledShiftId))
+                .Include(a => a.Employee)
+                .Include(a => a.Role)
+                .ToListAsync();
+
+            var dayAssignments = await _context.DayAssignment
+                .Where(a => a.ScheduledDayId == scheduledDay.Id)
+                .Include(a => a.Employee)
+                .Include(a => a.Role)
+                .ToListAsync();
+
             ViewBag.Requirements = requirements;
             ViewBag.Availability = availability;
+            ViewBag.ShiftAssignments = shiftAssignments;
+            ViewBag.DayAssignments = dayAssignments;
+            ViewBag.AllEmployees = await _context.Users.ToListAsync();
 
             return View(scheduledDay);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignShift(int scheduledShiftId, string employeeId, int roleId)
+        {
+            var alreadyAssigned = await _context.ShiftAssignment
+                .AnyAsync(a => a.ScheduledShiftId == scheduledShiftId
+                            && a.EmployeeId == employeeId
+                            && a.RoleId == roleId);
+
+            if (!alreadyAssigned)
+            {
+                _context.ShiftAssignment.Add(new ShiftAssignment
+                {
+                    ScheduledShiftId = scheduledShiftId,
+                    EmployeeId = employeeId,
+                    RoleId = roleId
+                });
+                await _context.SaveChangesAsync();
+            }
+
+            var scheduledShift = await _context.ScheduledShift.FindAsync(scheduledShiftId);
+            return RedirectToAction(nameof(Review), new { id = scheduledShift!.ScheduledDayId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignDay(int scheduledDayId, string employeeId, int roleId)
+        {
+            var alreadyAssigned = await _context.DayAssignment
+                .AnyAsync(a => a.ScheduledDayId == scheduledDayId
+                            && a.EmployeeId == employeeId
+                            && a.RoleId == roleId);
+
+            if (!alreadyAssigned)
+            {
+                _context.DayAssignment.Add(new DayAssignment
+                {
+                    ScheduledDayId = scheduledDayId,
+                    EmployeeId = employeeId,
+                    RoleId = roleId
+                });
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Review), new { id = scheduledDayId });
         }
     }
 }
