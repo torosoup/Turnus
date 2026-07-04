@@ -18,5 +18,6 @@ namespace Turnus.Models
         public DateTime Date { get; set; }
 
         public ICollection<ScheduledShift> ScheduledShifts { get; set; } = new List<ScheduledShift>();
+        public ICollection<DayAssignment> DayAssignments { get; set; } = new List<DayAssignment>();
     }
 }

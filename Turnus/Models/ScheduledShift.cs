@@ -18,5 +18,6 @@ namespace Turnus.Models
 
         [ForeignKey("ShiftDefinitionId")]
         public ShiftDefinition? ShiftDefinition { get; set; }
+        public ICollection<ShiftAssignment> ShiftAssignments { get; set; } = new List<ShiftAssignment>();
     }
 }
