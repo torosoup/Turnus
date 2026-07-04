@@ -1,0 +1,213 @@
+@using Turnus.Controllers
+@model ScheduleController.WeekScheduleViewModel
+
+@{
+    ViewData["Title"] = "Schedule";
+    var dayNames = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+}
+
+<div class="container-fluid mt-3">
+
+    @* Week navigation header *@
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-3">
+            @if (Model.CanGoPrevious)
+            {
+                <a asp-action="Index" asp-route-week="@Model.PreviousWeek" class="btn btn-outline-secondary btn-sm">&#8592;</a>
+            }
+            else
+            {
+                <button class="btn btn-outline-secondary btn-sm" disabled>&#8592;</button>
+            }
+
+            <h5 class="mb-0">Week @Model.WeekNumber, @Model.Year</h5>
+
+            @if (Model.CanGoNext)
+            {
+                <a asp-action="Index" asp-route-week="@Model.NextWeek" class="btn btn-outline-secondary btn-sm">&#8594;</a>
+            }
+            else
+            {
+                <button class="btn btn-outline-secondary btn-sm" disabled>&#8594;</button>
+            }
+        </div>
+
+        @* Venue selector or display *@
+        <div>
+            @if (Model.Venues.Count > 1)
+            {
+                <form method="get" asp-action="Index" class="d-inline">
+                    <input type="hidden" name="week" value="@Model.CurrentWeek" />
+                    <select name="venueId" class="form-select form-select-sm d-inline" style="width:auto;" onchange="this.form.submit()">
+                        @foreach (var venue in Model.Venues)
+                        {
+                            <option value="@venue.Id">@venue.Name</option>
+                        }
+                    </select>
+                </form>
+            }
+            else if (Model.Venues.Count == 1)
+            {
+                <span class="badge bg-secondary">@Model.Venues.First().Name</span>
+            }
+        </div>
+    </div>
+
+    @* Schedule table *@
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm" role="grid" aria-label="Weekly schedule">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col" style="min-width:120px;">Employee</th>
+                    @foreach (var day in Model.WeekDays)
+                    {
+                        <th scope="col" class="text-center" style="min-width:130px;">
+                            @day.ToString("ddd dd/MM")
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+
+                @* Row 1 — current user's own assignments *@
+                <tr class="table-primary">
+                    <td><strong>My shifts</strong></td>
+                    @foreach (var day in Model.WeekDays)
+                    {
+                        var myShifts = Model.MyShiftAssignmentsForDay(day);
+                        var myDayAssignments = Model.MyDayAssignmentsForDay(day);
+                        <td class="text-center align-middle">
+                            @if (!myShifts.Any() && !myDayAssignments.Any())
+                            {
+                                <span class="text-muted small">No shift</span>
+                            }
+                            else
+                            {
+                                @foreach (var a in myShifts)
+                                {
+                                    @* <div class="badge bg-primary mb-1 d-block" 
+                                         role="gridcell" 
+                                         tabindex="0"
+                                         aria-label="@a.ScheduledShift?.ScheduledDay?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
+                                        <div class="small">@a.ScheduledShift?.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
+                                    </div> *@
+
+                                    <a asp-action="ShiftDetail"
+                                    asp-route-id="@a.ScheduledShiftId"
+                                    asp-route-week="@Model.CurrentWeek"
+                                    class="badge bg-primary mb-1 d-block text-decoration-none"
+                                    role="gridcell"
+                                    tabindex="0"
+                                    aria-label="@a.ScheduledShift?.ScheduledDay?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                        <div class="small">@a.ScheduledShift?.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
+                                    </a>
+                                }
+                                @foreach (var a in myDayAssignments)
+                                {
+                                    <div class="badge bg-info mb-1 d-block"
+                                         role="gridcell"
+                                         tabindex="0"
+                                         aria-label="@a.ScheduledDay?.Venue?.Name @a.Role?.Name all day">
+                                        <div class="small">@a.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@a.Role?.Name (all day)</div>
+                                    </div>
+                                }
+                            }
+                        </td>
+                    }
+                </tr>
+
+                @* Row 2 — open slots *@
+                <tr class="table-warning">
+                    <td><strong>Open slots</strong></td>
+                    @foreach (var day in Model.WeekDays)
+                    {
+                        var shiftsThisDay = Model.ShiftsForDay(day);
+                        var hasOpenSlots = shiftsThisDay.Any(s => Model.ShiftHasOpenSlots(s, Model.Requirements));
+                        <td class="text-center align-middle">
+                            @if (hasOpenSlots)
+                            {
+                                @foreach (var shift in shiftsThisDay.Where(s => Model.ShiftHasOpenSlots(s, Model.Requirements)))
+                                {
+                                    <a asp-action="ShiftDetail" asp-route-id="@shift.Id" asp-route-week="@Model.CurrentWeek"
+                                       class="badge bg-warning text-dark mb-1 d-block text-decoration-none"
+                                       role="gridcell"
+                                       tabindex="0"
+                                       aria-label="Open slot: @shift.ScheduledDay?.Venue?.Name @shift.ShiftDefinition?.Name">
+                                        <div class="small">@shift.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@shift.ShiftDefinition?.Name</div>
+                                        <div class="small">@shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime</div>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </td>
+                    }
+                </tr>
+
+                @* Remaining rows — other employees *@
+                @foreach (var employee in Model.OtherEmployees())
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <span class="small">@(string.IsNullOrEmpty(employee.FullName) ? employee.Email : employee.FullName)</span>
+                        </td>
+                        @foreach (var day in Model.WeekDays)
+                        {
+                            var theirShifts = Model.ShiftAssignmentsForEmployeeOnDay(employee.Id, day);
+                            var theirDayAssignments = Model.DayAssignmentsForEmployeeOnDay(employee.Id, day);
+                            <td class="text-center align-middle">
+                                @foreach (var a in theirShifts)
+                                {
+                                    @* <div class="badge bg-secondary mb-1 d-block"
+                                         role="gridcell"
+                                         tabindex="0"
+                                         aria-label="@a.ScheduledShift?.ScheduledDay?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                        <div class="small">@a.ScheduledShift?.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
+                                    </div> *@
+
+                                    @* In "My shifts" row — replace the div with: *@
+                                    <a asp-action="ShiftDetail"
+                                    asp-route-id="@a.ScheduledShiftId"
+                                    asp-route-week="@Model.CurrentWeek"
+                                    class="badge bg-secondary mb-1 d-block text-decoration-none"
+                                    role="gridcell"
+                                    tabindex="0"
+                                    aria-label="@a.ScheduledShift?.ScheduledDay?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                        <div class="small">@a.ScheduledShift?.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
+                                    </a>
+                                }
+                                @foreach (var a in theirDayAssignments)
+                                {
+                                    <div class="badge bg-secondary mb-1 d-block"
+                                         role="gridcell"
+                                         tabindex="0"
+                                         aria-label="@a.ScheduledDay?.Venue?.Name @a.Role?.Name all day">
+                                        <div class="small">@a.ScheduledDay?.Venue?.Name</div>
+                                        <div class="small">@a.Role?.Name (all day)</div>
+                                    </div>
+                                }
+                                @if (!theirShifts.Any() && !theirDayAssignments.Any())
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
