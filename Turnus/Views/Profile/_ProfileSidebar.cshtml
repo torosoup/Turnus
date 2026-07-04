@@ -1,0 +1,33 @@
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+
+    bool IsActive(string action, string controller = "Profile", string area = "") =>
+        currentAction == action && currentController == controller && currentArea == area;
+}
+
+<div class="col-md-3">
+    <div class="list-group">
+        <a asp-controller="Profile" asp-action="Index"
+           class="list-group-item list-group-item-action @(IsActive("Index") ? "active" : "")">
+            Overview
+        </a>
+        <a asp-controller="Profile" asp-action="EditInfo"
+           class="list-group-item list-group-item-action @(IsActive("EditInfo") ? "active" : "")">
+            Edit Info
+        </a>
+        <a asp-area="Identity" asp-page="/Account/Manage/Email"
+           class="list-group-item list-group-item-action @(IsActive("Email", "Account", "Identity") ? "active" : "")">
+            Change Email
+        </a>
+        <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword"
+           class="list-group-item list-group-item-action @(IsActive("ChangePassword", "Account", "Identity") ? "active" : "")">
+            Change Password
+        </a>
+        <a asp-controller="Profile" asp-action="Security"
+           class="list-group-item list-group-item-action @(IsActive("Security") ? "active" : "")">
+            Security
+        </a>
+    </div>
+</div>
