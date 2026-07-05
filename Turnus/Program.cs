@@ -8,12 +8,36 @@ var connectionString = builder.Configuration.GetConnectionString("TurnusContext"
 builder.Services.AddDbContext<TurnusContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<TurnusContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// Seed Manager role and assign to configured email
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+    if (!await roleManager.RoleExistsAsync("Manager"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("Manager"));
+    }
+
+    var managerEmail = builder.Configuration["Seeding:ManagerEmail"];
+    if (!string.IsNullOrEmpty(managerEmail))
+    {
+        var managerUser = await userManager.FindByEmailAsync(managerEmail);
+        if (managerUser != null && !await userManager.IsInRoleAsync(managerUser, "Manager"))
+        {
+            await userManager.AddToRoleAsync(managerUser, "Manager");
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
