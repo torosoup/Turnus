@@ -1,80 +1,94 @@
-﻿@model Turnus.Models.ScheduledDay
+﻿@model IEnumerable<Turnus.Models.ScheduledShift>
 
 @{
     ViewData["Title"] = "Review Staffing";
     var requirements = ViewBag.Requirements as List<Turnus.Models.VenueStaffingRequirement>;
     var availability = ViewBag.Availability as List<Turnus.Models.Availability>;
-    var shiftAssignments = ViewBag.ShiftAssignments as List<Turnus.Models.ShiftAssignment>;
-    var dayAssignments = ViewBag.DayAssignments as List<Turnus.Models.DayAssignment>;
+    var allEmployees = ViewBag.AllEmployees as List<Turnus.Models.ApplicationUser>;
+    var venue = ViewBag.Venue as Turnus.Models.Venue;
+    var date = (DateTime)ViewBag.Date;
 
     var dayScoped = requirements?.Where(r => !r.IsShiftScoped).ToList() ?? new();
     var shiftScoped = requirements?.Where(r => r.IsShiftScoped).ToList() ?? new();
 }
 
 <h1>Review Staffing</h1>
-<h4>@Model.Venue?.Name — @Model.Date.ToShortDateString()</h4>
+<h4>@venue?.Name — @date.ToShortDateString()</h4>
 <hr />
 
-<h5>Day-wide roles</h5>
-@if (!dayScoped.Any())
+@if (!Model.Any())
 {
-    <p class="text-muted">No day-wide roles required for this venue.</p>
+    <p class="text-muted">No shifts scheduled for this venue on this date.</p>
 }
 else
 {
-    @foreach (var req in dayScoped)
+    @* Day-wide roles — shown once, not per shift *@
+    @if (dayScoped.Any())
     {
-        var assignedForThisRole = dayAssignments?
-            .Where(a => a.RoleId == req.RoleId)
-            .ToList() ?? new();
+        <h5>Day-wide roles</h5>
+        @foreach (var req in dayScoped)
+        {
+            @* Collect all assignments for this role across all shifts this day *@
+            var assignedForThisRole = Model
+                .SelectMany(s => s.ShiftAssignments.Where(a => a.RoleId == req.RoleId))
+                .ToList();
 
-        <div class="mb-3">
-            <strong>@req.Role?.Name</strong> (need @req.RequiredCount, assigned: @assignedForThisRole.Count)
+            <div class="mb-3 p-3 border rounded">
+                <strong>@req.Role?.Name</strong>
+                <span class="text-muted small ms-2">(need @req.RequiredCount, assigned: @assignedForThisRole.Count)</span>
 
-            @if (assignedForThisRole.Any())
-            {
-                <ul>
-                    @foreach (var a in assignedForThisRole)
-                    {
-                        <li>@a.Employee?.Email</li>
-                    }
-                </ul>
-            }
+                @if (assignedForThisRole.Any())
+                {
+                    <ul class="mt-2 mb-2">
+                        @foreach (var a in assignedForThisRole)
+                        {
+                            <li class="d-flex align-items-center gap-2">
+                                @a.Employee?.Email (assigned)
+                                <form asp-action="UnassignShift" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="shiftAssignmentId" value="@a.Id" />
+                                    <input type="hidden" name="venueId" value="@venue!.Id" />
+                                    <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
 
-            <form asp-action="AssignDay" method="post" class="form-inline">
-                <input type="hidden" name="scheduledDayId" value="@Model.Id" />
-                <input type="hidden" name="roleId" value="@req.RoleId" />
-                <select name="employeeId" class="form-control form-control-sm d-inline" style="width:auto;">
-                    <option value="">-- pick employee --</option>
-                    @* No self-service availability exists yet for day-wide roles,
-                       so this is currently a manual entry — list all registered users *@
-                    @foreach (var emp in ViewBag.AllEmployees as List<Turnus.Models.ApplicationUser> ?? new())
-                    {
-                        <option value="@emp.Id">@emp.Email</option>
-                    }
-                </select>
-                <button type="submit" class="btn btn-sm btn-primary">Assign</button>
-            </form>
-        </div>
+                @* Manual assignment from all employees for day-wide roles *@
+                <form asp-action="AssignShift" method="post" class="d-flex gap-2 align-items-center mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="scheduledShiftId" value="@Model.First().Id" />
+                    <input type="hidden" name="roleId" value="@req.RoleId" />
+                    <select name="employeeId" class="form-select form-select-sm" style="width:auto;">
+                        <option value="">-- pick employee --</option>
+                        @foreach (var emp in allEmployees ?? new())
+                        {
+                            <option value="@emp.Id">@emp.Email</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+                </form>
+                <p class="text-muted small mt-1">Day-wide role — assigned manually from all registered users.</p>
+            </div>
+        }
     }
-    <p class="text-muted">Note: availability tracking for day-wide roles isn't built yet — pick manually from all registered users.</p>
-}
 
-<h5>Per-shift roles</h5>
-@if (!Model.ScheduledShifts.Any())
-{
-    <p class="text-muted">No shifts have been scheduled for this day yet.</p>
-}
-else
-{
-    @foreach (var shift in Model.ScheduledShifts)
+    @* Per-shift roles *@
+    <h5>Per-shift roles</h5>
+    @foreach (var shift in Model)
     {
-        <div class="mb-4">
-            <h6>@shift.ShiftDefinition?.Name (@shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime)</h6>
+        <div class="mb-4 p-3 border rounded">
+            <h6>
+                @shift.Department?.Name —
+                @shift.ShiftDefinition?.Name
+                (@shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime)
+            </h6>
 
             @if (!shiftScoped.Any())
             {
-                <p class="text-muted">No per-shift roles required for this venue.</p>
+                <p class="text-muted small">No per-shift roles defined for this department.</p>
             }
             else
             {
@@ -84,42 +98,60 @@ else
                         .Where(a => a.ScheduledShiftId == shift.Id)
                         .ToList() ?? new();
 
-                    var assignedForThisShiftRole = shiftAssignments?
-                        .Where(a => a.ScheduledShiftId == shift.Id && a.RoleId == req.RoleId)
-                        .ToList() ?? new();
+                    var assignedForThisShiftRole = shift.ShiftAssignments
+                        .Where(a => a.RoleId == req.RoleId)
+                        .ToList();
 
                     <div class="mb-3">
-                        <strong>@req.Role?.Name</strong> (need @req.RequiredCount, assigned: @assignedForThisShiftRole.Count)
+                        <strong>@req.Role?.Name</strong>
+                        <span class="text-muted small ms-2">
+                            (need @req.RequiredCount, assigned: @assignedForThisShiftRole.Count)
+                        </span>
 
                         @if (assignedForThisShiftRole.Any())
                         {
-                            <ul>
+                            <ul class="mt-2 mb-2">
                                 @foreach (var a in assignedForThisShiftRole)
                                 {
-                                    <li>@a.Employee?.Email (assigned)</li>
+                                    <li class="d-flex align-items-center gap-2">
+                                        @a.Employee?.Email (assigned)
+                                        <form asp-action="UnassignShift" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="shiftAssignmentId" value="@a.Id" />
+                                            <input type="hidden" name="venueId" value="@venue!.Id" />
+                                            <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                        </form>
+                                    </li>
                                 }
                             </ul>
                         }
 
                         @if (!availableForThisShift.Any())
                         {
-                            <p class="text-muted">No one available yet.</p>
+                            <p class="text-muted small">No one available yet.</p>
                         }
                         else
                         {
-                            @foreach (var avail in availableForThisShift)
-                            {
-                                var isAlreadyAssigned = assignedForThisShiftRole.Any(a => a.EmployeeId == avail.EmployeeId);
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                @foreach (var avail in availableForThisShift)
+                                {
+                                    var isAlreadyAssigned = assignedForThisShiftRole
+                                        .Any(a => a.EmployeeId == avail.EmployeeId);
 
-                                <form asp-action="AssignShift" method="post" class="d-inline">
-                                    <input type="hidden" name="scheduledShiftId" value="@shift.Id" />
-                                    <input type="hidden" name="employeeId" value="@avail.EmployeeId" />
-                                    <input type="hidden" name="roleId" value="@req.RoleId" />
-                                    <button type="submit" class="btn btn-sm @(isAlreadyAssigned ? "btn-secondary" : "btn-success")" @(isAlreadyAssigned ? "disabled" : "")>
-                                        @(isAlreadyAssigned ? "Assigned: " : "Assign: ")@avail.Employee?.Email
-                                    </button>
-                                </form>
-                            }
+                                    <form asp-action="AssignShift" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="scheduledShiftId" value="@shift.Id" />
+                                        <input type="hidden" name="employeeId" value="@avail.EmployeeId" />
+                                        <input type="hidden" name="roleId" value="@req.RoleId" />
+                                        <button type="submit"
+                                                class="btn btn-sm @(isAlreadyAssigned ? "btn-secondary" : "btn-success")"
+                                                @(isAlreadyAssigned ? "disabled" : "")>
+                                            @(isAlreadyAssigned ? "✓ " : "")@avail.Employee?.Email
+                                        </button>
+                                    </form>
+                                }
+                            </div>
                         }
                     </div>
                 }
@@ -128,6 +160,6 @@ else
     }
 }
 
-<div>
-    <a asp-controller="ScheduledDays" asp-action="Index">Back to Scheduled Days</a>
+<div class="mt-3">
+    <a asp-controller="Admin" asp-action="Dashboard">Back to Dashboard</a>
 </div>

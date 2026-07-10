@@ -15,51 +15,51 @@ namespace Turnus.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Review(int id)
+        // GET: /ScheduleReview/Review?venueId=1&date=2026-07-14
+        public async Task<IActionResult> Review(int venueId, DateTime date)
         {
-            var scheduledDay = await _context.ScheduledDay
-                .Include(d => d.Venue)
-                .Include(d => d.ScheduledShifts)
-                    .ThenInclude(s => s.ShiftDefinition)
-                .FirstOrDefaultAsync(d => d.Id == id);
+            var venue = await _context.Venue.FindAsync(venueId);
+            if (venue == null) return NotFound();
 
-            if (scheduledDay == null)
-            {
-                return NotFound();
-            }
-
-            var requirements = await _context.VenueStaffingRequirement
-                .Where(r => r.VenueId == scheduledDay.VenueId)
-                .Include(r => r.Role)
+            var shifts = await _context.ScheduledShift
+                .Include(s => s.Department)
+                .Include(s => s.ShiftDefinition)
+                .Include(s => s.ShiftAssignments)
+                    .ThenInclude(a => a.Employee)
+                .Include(s => s.ShiftAssignments)
+                    .ThenInclude(a => a.Role)
+                .Where(s => s.VenueId == venueId && s.Date.Date == date.Date)
                 .ToListAsync();
 
-            var shiftIds = scheduledDay.ScheduledShifts.Select(s => s.Id).ToList();
+            var shiftIds = shifts.Select(s => s.Id).ToList();
+
+            var departmentIds = shifts
+                .Where(s => s.DepartmentId.HasValue)
+                .Select(s => s.DepartmentId!.Value)
+                .Distinct()
+                .ToList();
+
+            var requirements = await _context.VenueStaffingRequirement
+                .Include(r => r.Role)
+                .Where(r => departmentIds.Contains(r.DepartmentId))
+                .ToListAsync();
 
             var availability = await _context.Availability
                 .Where(a => shiftIds.Contains(a.ScheduledShiftId) && a.IsAvailable)
                 .Include(a => a.Employee)
-                .Include(a => a.ScheduledShift)
                 .ToListAsync();
 
-            var shiftAssignments = await _context.ShiftAssignment
-                .Where(a => shiftIds.Contains(a.ScheduledShiftId))
-                .Include(a => a.Employee)
-                .Include(a => a.Role)
+            var allEmployees = await _context.Users
+                .Cast<ApplicationUser>()
                 .ToListAsync();
 
-            var dayAssignments = await _context.DayAssignment
-                .Where(a => a.ScheduledDayId == scheduledDay.Id)
-                .Include(a => a.Employee)
-                .Include(a => a.Role)
-                .ToListAsync();
-
+            ViewBag.Venue = venue;
+            ViewBag.Date = date;
             ViewBag.Requirements = requirements;
             ViewBag.Availability = availability;
-            ViewBag.ShiftAssignments = shiftAssignments;
-            ViewBag.DayAssignments = dayAssignments;
-            ViewBag.AllEmployees = await _context.Users.ToListAsync();
+            ViewBag.AllEmployees = allEmployees;
 
-            return View(scheduledDay);
+            return View(shifts);
         }
 
         [HttpPost]
@@ -81,30 +81,29 @@ namespace Turnus.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            var scheduledShift = await _context.ScheduledShift.FindAsync(scheduledShiftId);
-            return RedirectToAction(nameof(Review), new { id = scheduledShift!.ScheduledDayId });
+            var shift = await _context.ScheduledShift.FindAsync(scheduledShiftId);
+            return RedirectToAction(nameof(Review), new
+            {
+                venueId = shift!.VenueId,
+                date = shift.Date.ToString("yyyy-MM-dd")
+            });
         }
 
         [HttpPost]
-        public async Task<IActionResult> AssignDay(int scheduledDayId, string employeeId, int roleId)
+        public async Task<IActionResult> UnassignShift(int shiftAssignmentId, int venueId, DateTime date)
         {
-            var alreadyAssigned = await _context.DayAssignment
-                .AnyAsync(a => a.ScheduledDayId == scheduledDayId
-                            && a.EmployeeId == employeeId
-                            && a.RoleId == roleId);
-
-            if (!alreadyAssigned)
+            var assignment = await _context.ShiftAssignment.FindAsync(shiftAssignmentId);
+            if (assignment != null)
             {
-                _context.DayAssignment.Add(new DayAssignment
-                {
-                    ScheduledDayId = scheduledDayId,
-                    EmployeeId = employeeId,
-                    RoleId = roleId
-                });
+                _context.ShiftAssignment.Remove(assignment);
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction(nameof(Review), new { id = scheduledDayId });
+            return RedirectToAction(nameof(Review), new
+            {
+                venueId,
+                date = date.ToString("yyyy-MM-dd")
+            });
         }
     }
 }

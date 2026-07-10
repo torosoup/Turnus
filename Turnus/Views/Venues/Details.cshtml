@@ -1,45 +1,20 @@
-@model Turnus.Models.Venue
+﻿@model Turnus.Models.Venue
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Venue Details";
 }
 
-<h1>Details</h1>
+<h1>@Model.Name</h1>
+<hr />
 
-<div>
-    <h4>Venue</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VenueStaffingRequirements)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VenueStaffingRequirements)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ShiftDefinitions)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ShiftDefinitions)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ScheduledDays)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ScheduledDays)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+<dl class="row">
+    <dt class="col-sm-2">Name</dt>
+    <dd class="col-sm-10">@Model.Name</dd>
+    <dt class="col-sm-2">Created</dt>
+    <dd class="col-sm-10">@Model.CreatedAt.ToShortDateString()</dd>
+    <dt class="col-sm-2">Departments</dt>
+    <dd class="col-sm-10">@Model.Departments.Count</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+<a asp-action="Index" class="btn btn-outline-secondary ms-2">Back to list</a>

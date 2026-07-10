@@ -1,0 +1,13 @@
+﻿@model Turnus.Models.Department
+
+<h5 class="modal-title mb-3">Edit Department</h5>
+<form asp-action="Edit" asp-controller="Departments" method="post" id="department-edit-form">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="VenueId" />
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>

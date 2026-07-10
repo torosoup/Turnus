@@ -1,0 +1,16 @@
+﻿<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Admin Dashboard</h2>
+
+    <div>
+        <label class="form-label me-2">Venue:</label>
+        <select id="venueSelect" class="form-select d-inline-block w-auto"
+                onchange="Dashboard.changeVenue(this.value)">
+            @foreach (var v in Model.Venues)
+            {
+                <option value="@v.Id" selected="@(Model.SelectedVenue?.Id == v.Id)">
+                    @v.Name
+                </option>
+            }
+        </select>
+    </div>
+</div>

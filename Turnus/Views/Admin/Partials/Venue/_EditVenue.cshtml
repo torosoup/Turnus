@@ -1,0 +1,13 @@
+﻿@model Turnus.Models.Venue
+
+<h5 class="modal-title mb-3">Edit Venue</h5>
+<form asp-action="Edit" asp-controller="Venues" method="post" id="venue-edit-form">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="CreatedAt" />
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>

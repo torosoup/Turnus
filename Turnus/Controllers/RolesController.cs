@@ -37,9 +37,14 @@ public class RolesController : Controller
     }
 
     // GET: ROLES/Create
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        return View();
+        ViewBag.Venues = await _context.Venue.ToListAsync();
+        ViewBag.Departments = await _context.Department.ToListAsync();
+
+        return PartialView(
+            "~/Views/Admin/Partials/Role/_CreateRole.cshtml",
+            new Role());
     }
 
     // POST: ROLES/Create
@@ -47,15 +52,22 @@ public class RolesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Id,Name")] Role role)
+    public async Task<IActionResult> Create(Role role)
     {
         if (ModelState.IsValid)
         {
             _context.Add(role);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("Dashboard", "Admin");
         }
-        return View(role);
+
+        ViewBag.Venues = await _context.Venue.ToListAsync();
+        ViewBag.Departments = await _context.Department.ToListAsync();
+
+        return PartialView(
+            "~/Views/Admin/Partials/Role/_CreateRole.cshtml",
+            role);
     }
 
     // GET: ROLES/Edit/5
@@ -67,11 +79,18 @@ public class RolesController : Controller
         }
 
         var role = await _context.Role.FindAsync(id);
+
         if (role == null)
         {
             return NotFound();
         }
-        return View(role);
+
+        ViewBag.Venues = await _context.Venue.ToListAsync();
+        ViewBag.Departments = await _context.Department.ToListAsync();
+
+        return PartialView(
+            "~/Views/Admin/Partials/Role/_EditRole.cshtml",
+            role);
     }
 
     // POST: ROLES/Edit/5
@@ -79,7 +98,7 @@ public class RolesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("Id,Name")] Role role)
+    public async Task<IActionResult> Edit(int? id, Role role)
     {
         if (id != role.Id)
         {
@@ -99,14 +118,19 @@ public class RolesController : Controller
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("Dashboard", "Admin");
         }
-        return View(role);
+
+        ViewBag.Venues = await _context.Venue.ToListAsync();
+        ViewBag.Departments = await _context.Department.ToListAsync();
+
+        return PartialView(
+            "~/Views/Admin/Partials/Role/_EditRole.cshtml",
+            role);
     }
 
     // GET: ROLES/Delete/5
@@ -124,7 +148,7 @@ public class RolesController : Controller
             return NotFound();
         }
 
-        return View(role);
+        return PartialView("~/Views/Admin/Partials/Role/_DeleteRole.cshtml", role);
     }
 
     // POST: ROLES/Delete/5
@@ -139,7 +163,7 @@ public class RolesController : Controller
         }
 
         await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Dashboard", "Admin");
     }
 
     private bool RoleExists(int? id)

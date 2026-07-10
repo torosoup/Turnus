@@ -1,256 +1,56 @@
-@using Turnus.Controllers
-@model AdminController.DashboardViewModel
+@model Turnus.Controllers.AdminController.DashboardViewModel
 
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="container-fluid mt-3">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h3>Admin Dashboard</h3>
+<section class="py-4 bg-light">
+    <div id="admin-dashboard" class="container mt-4">
+        <h2>Admin Dashboard</h2>
 
-        @* Venue selector *@
-        @if (Model.Venues.Count > 1)
-        {
-            <form method="get" asp-action="Dashboard" class="d-inline">
-                <select name="venueId" class="form-select form-select-sm d-inline" style="width:auto;" onchange="this.form.submit()">
-                    @foreach (var venue in Model.Venues)
-                    {
-                        if (venue.Id == Model.SelectedVenue?.Id)
-                        {
-                            <option value="@venue.Id" selected>@venue.Name</option>
-                        }
-                        else
-                        {
-                            <option value="@venue.Id">@venue.Name</option>
-                        }
-                    }
-                </select>
-            </form>
-        }
-        else if (Model.SelectedVenue != null)
-        {
-            <span class="badge bg-secondary fs-6">@Model.SelectedVenue.Name</span>
-        }
+        <!-- Venue selector -->
+        <div class="mb-3">
+            <label for="venueSelect" class="form-label">Select venue</label>
+            <select id="venueSelect" class="form-select"
+                    onchange="Dashboard.changeVenue(this.value)">
+                @foreach (var v in Model.Venues)
+                {
+                    <option value="@v.Id" selected="@(Model.SelectedVenue?.Id == v.Id)">
+                        @v.Name
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- AJAX-loaded sections -->
+        <partial name="_VenueSettingsSection" model="Model" />
+        <partial name="_DepartmentsSection" model="Model" />
+        <partial name="_RolesSection" model="Model" />
+        <partial name="_ShiftDefinitionsSection" model="Model" />
+        <partial name="_StaffingRequirementsSection" model="Model" />
+        <partial name="_ScheduleSection" model="Model" />
+
+        <!-- Modal container -->
+        <div id="dashboard-modal-container"></div>
     </div>
+</section>
 
-    @if (!Model.Venues.Any())
-    {
-        <div class="alert alert-warning">
-            No venues exist yet. Create a venue first to get started.
-            <a asp-controller="Venues" asp-action="Create" class="btn btn-sm btn-primary ms-2">Create Venue</a>
-        </div>
-    }
-    else
-    {
-        <div class="row g-4">
+@section Scripts {
+    <script src="~/js/modal.js"></script>
+    <script src="~/js/dashboard.js"></script>
+    <script src="~/js/dashboard.venues.js"></script>
+    <script src="~/js/dashboard.departments.js"></script>
+    <script src="~/js/dashboard.roles.js"></script>
+    <script src="~/js/dashboard.schedule.js"></script>
+    <script src="~/js/dashboard.shiftdefinitions.js"></script>
+    <script src="~/js/dashboard.staffing.js"></script>
+    <script src="~/js/dashboard.scheduledshift.js"></script>
+    <script src="~/js/dashboard.assignments.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const venueId = @Model.SelectedVenue?.Id ?? 0;
+        Dashboard.loadSections(venueId);
+        });
+    </script>
 
-            @* Section A — Venue Settings *@
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0">A — Venue Settings</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted small">Configure your venue before scheduling. Complete each step in order.</p>
-
-                        @* Step 1 — Venues *@
-                        <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded">
-                            <div>
-                                <span class="badge @(Model.Venues.Any() ? "bg-success" : "bg-secondary") me-2">
-                                    @(Model.Venues.Any() ? "✓" : "1")
-                                </span>
-                                <strong>Venues</strong>
-                                <div class="text-muted small ms-4">@Model.Venues.Count venue(s) defined</div>
-                            </div>
-                            <div class="d-flex gap-1">
-                                <a asp-controller="Venues" asp-action="Index"
-                                   class="btn btn-sm btn-outline-secondary">Manage</a>
-                                <a asp-controller="Venues" asp-action="Create"
-                                   class="btn btn-sm btn-outline-primary">+ Add</a>
-                            </div>
-                        </div>
-
-                        @* Step 2 — Roles *@
-                        <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded">
-                            <div>
-                                <span class="badge @(Model.HasRoles ? "bg-success" : "bg-secondary") me-2">
-                                    @(Model.HasRoles ? "✓" : "2")
-                                </span>
-                                <strong>Roles</strong>
-                                <div class="text-muted small ms-4">@Model.Roles.Count role(s) defined</div>
-                            </div>
-                            <div class="d-flex gap-1">
-                                <a asp-controller="Roles" asp-action="Index"
-                                   class="btn btn-sm btn-outline-secondary">Manage</a>
-                                <a asp-controller="Roles" asp-action="Create"
-                                   class="btn btn-sm btn-outline-primary">+ Add</a>
-                            </div>
-                        </div>
-
-                        @* Step 3 — Shift Definitions (gated until roles exist) *@
-                        <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded
-                             @(!Model.HasRoles ? "opacity-50" : "")">
-                            <div>
-                                <span class="badge @(Model.HasShiftDefinitions ? "bg-success" : "bg-secondary") me-2">
-                                    @(Model.HasShiftDefinitions ? "✓" : "3")
-                                </span>
-                                <strong>Shift Definitions</strong>
-                                <div class="text-muted small ms-4">
-                                    @Model.ShiftDefinitions.Count shift pattern(s) for @Model.SelectedVenue?.Name
-                                </div>
-                                @if (!Model.HasRoles)
-                                {
-                                    <div class="text-warning small ms-4">⚠ Define roles first</div>
-                                }
-                            </div>
-                            <div class="d-flex gap-1">
-                                @if (Model.HasRoles)
-                                {
-                                    <a asp-controller="ShiftDefinitions" asp-action="Index"
-                                       class="btn btn-sm btn-outline-secondary">Manage</a>
-                                    <a asp-controller="ShiftDefinitions" asp-action="Create"
-                                       class="btn btn-sm btn-outline-primary">+ Add</a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-outline-secondary" disabled>Manage</button>
-                                    <button class="btn btn-sm btn-outline-primary" disabled>+ Add</button>
-                                }
-                            </div>
-                        </div>
-
-                        @* Step 4 — Staffing Requirements (gated until shift definitions exist) *@
-                        <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded
-                             @(!Model.HasShiftDefinitions ? "opacity-50" : "")">
-                            <div>
-                                <span class="badge @(Model.HasStaffingRequirements ? "bg-success" : "bg-secondary") me-2">
-                                    @(Model.HasStaffingRequirements ? "✓" : "4")
-                                </span>
-                                <strong>Staffing Requirements</strong>
-                                <div class="text-muted small ms-4">
-                                    @Model.StaffingRequirements.Count requirement(s) for @Model.SelectedVenue?.Name
-                                </div>
-                                @if (!Model.HasShiftDefinitions)
-                                {
-                                    <div class="text-warning small ms-4">⚠ Define shift patterns first</div>
-                                }
-                                else
-                                {
-                                    @foreach (var req in Model.StaffingRequirements)
-                                    {
-                                        <div class="text-muted small ms-4">
-                                            @req.Role?.Name — @req.RequiredCount
-                                            @(req.IsShiftScoped ? "(per shift)" : "(per day)")
-                                        </div>
-                                    }
-                                }
-                            </div>
-                            <div class="d-flex gap-1">
-                                @if (Model.HasShiftDefinitions)
-                                {
-                                    <a asp-controller="VenueStaffingRequirements" asp-action="Index"
-                                       class="btn btn-sm btn-outline-secondary">Manage</a>
-                                    <a asp-controller="VenueStaffingRequirements" asp-action="Create"
-                                       class="btn btn-sm btn-outline-primary">+ Add</a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-outline-secondary" disabled>Manage</button>
-                                    <button class="btn btn-sm btn-outline-primary" disabled>+ Add</button>
-                                }
-                            </div>
-                        </div>
-
-                        @if (Model.VenueSettingsComplete)
-                        {
-                            <div class="alert alert-success mb-0">
-                                ✓ Venue settings complete — you can now schedule shifts.
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-info mb-0">
-                                Complete all steps above before scheduling.
-                            </div>
-                        }
-
-                    </div>
-                </div>
-            </div>
-
-            @* Section B — Scheduled *@
-            <div class="col-md-6">
-                <div class="card h-100 @(!Model.VenueSettingsComplete ? "opacity-50" : "")">
-                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">B — Scheduled</h5>
-                        @if (Model.VenueSettingsComplete)
-                        {
-                            <a asp-controller="ScheduledDays" asp-action="Create"
-                               class="btn btn-sm btn-outline-light">+ Schedule a day</a>
-                        }
-                    </div>
-                    <div class="card-body">
-
-                        @if (!Model.VenueSettingsComplete)
-                        {
-                            <div class="alert alert-warning">
-                                Complete Section A (Venue Settings) before scheduling.
-                            </div>
-                        }
-                        else if (!Model.ScheduledDays.Any())
-                        {
-                            <p class="text-muted">No days scheduled yet for @Model.SelectedVenue?.Name.</p>
-                            <a asp-controller="ScheduledDays" asp-action="Create"
-                               class="btn btn-primary">Schedule first day</a>
-                        }
-                        else
-                        {
-                            <table class="table table-sm table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Shifts</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var day in Model.ScheduledDays)
-                                {
-                                    <tr>
-                                        <td>@day.Date.ToShortDateString()</td>
-                                        <td>
-                                            @if (!day.ScheduledShifts.Any())
-                                            {
-                                                <span class="text-muted small">No shifts added</span>
-                                            }
-                                            else
-                                            {
-                                                @foreach (var shift in day.ScheduledShifts)
-                                                {
-                                                    <span class="badge bg-secondary me-1">
-                                                        @shift.ShiftDefinition?.Name
-                                                    </span>
-                                                }
-                                            }
-                                        </td>
-                                        <td class="text-end">
-                                            <a asp-controller="ScheduledShifts" asp-action="Create"
-                                               class="btn btn-sm btn-outline-primary me-1">+ Shift</a>
-                                            <a asp-controller="ScheduleReview" asp-action="Review"
-                                               asp-route-id="@day.Id"
-                                               class="btn btn-sm btn-outline-secondary">Review</a>
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        }
-
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    }
-</div>
+}

@@ -1,0 +1,20 @@
+﻿@model Turnus.Models.ShiftAssignment
+
+<h5 class="modal-title mb-3">Assign shift</h5>
+<form asp-action="AssignShift" asp-controller="ScheduleReview" method="post" id="assignshift-form">
+    <input type="hidden" asp-for="ScheduledShiftId" />
+
+    <div class="mb-3">
+        <label class="form-label">Employee</label>
+        <select asp-for="EmployeeId" class="form-select"
+                asp-items="@(new SelectList(ViewBag.AllEmployees, "Id", "FullName"))"></select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Role</label>
+        <select asp-for="RoleId" class="form-select"
+                asp-items="@(new SelectList(ViewBag.Roles, "Id", "Name"))"></select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Assign</button>
+</form>
