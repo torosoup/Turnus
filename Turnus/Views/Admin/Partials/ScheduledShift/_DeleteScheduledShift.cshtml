@@ -1,0 +1,7 @@
+﻿@model Turnus.Models.ScheduledShift
+
+<form asp-action="Delete" asp-controller="ScheduledShifts" method="post" id="scheduledshift-delete-form">
+    <input type="hidden" asp-for="Id" />
+    <p>Delete scheduled shift <strong>@Model.ShiftDefinition?.Name</strong> on @Model.Date.ToString("yyyy-MM-dd")?</p>
+    <button type="submit" class="btn btn-danger">Delete</button>
+</form>

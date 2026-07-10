@@ -8,16 +8,27 @@ namespace Turnus.Models
         public int Id { get; set; }
 
         [Required]
-        public int ScheduledDayId { get; set; }
+        public int VenueId { get; set; }
 
-        [ForeignKey("ScheduledDayId")]
-        public ScheduledDay? ScheduledDay { get; set; }
+        [ForeignKey("VenueId")]
+        public Venue? Venue { get; set; }
+
+        public int? DepartmentId { get; set; }
+
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
 
         [Required]
         public int ShiftDefinitionId { get; set; }
 
         [ForeignKey("ShiftDefinitionId")]
         public ShiftDefinition? ShiftDefinition { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        public DateTime Date { get; set; }
+
         public ICollection<ShiftAssignment> ShiftAssignments { get; set; } = new List<ShiftAssignment>();
+        public ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
     }
 }

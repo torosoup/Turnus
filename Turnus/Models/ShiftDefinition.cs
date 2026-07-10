@@ -8,14 +8,14 @@ namespace Turnus.Models
         public int Id { get; set; }
 
         [Required]
-        public int VenueId { get; set; }
+        public int DepartmentId { get; set; }
 
-        [ForeignKey("VenueId")]
-        public Venue? Venue { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
 
         [Required]
         [StringLength(40)]
-        public string Name { get; set; } = string.Empty; // e.g. "Early", "Late"
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Time)]

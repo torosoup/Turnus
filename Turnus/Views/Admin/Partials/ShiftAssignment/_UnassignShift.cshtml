@@ -1,0 +1,12 @@
+﻿@model Turnus.Models.ShiftAssignment
+
+<h5 class="modal-title mb-3">Unassign shift</h5>
+<form asp-action="UnassignShift" asp-controller="ScheduleReview" method="post" id="unassignshift-form">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" name="venueId" value="@ViewBag.VenueId" />
+    <input type="hidden" name="date" value="@ViewBag.Date" />
+
+    <p>Remove assignment for <strong>@Model.Employee?.FullName</strong>?</p>
+
+    <button type="submit" class="btn btn-danger">Unassign</button>
+</form>

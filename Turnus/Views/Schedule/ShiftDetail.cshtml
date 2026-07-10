@@ -19,10 +19,10 @@
             @* Shift summary *@
             <dl class="row mb-3">
                 <dt class="col-sm-4">Venue</dt>
-                <dd class="col-sm-8">@Model.ScheduledDay?.Venue?.Name</dd>
+                <dd class="col-sm-8">@Model?.Venue?.Name</dd>
 
                 <dt class="col-sm-4">Date</dt>
-                <dd class="col-sm-8">@Model.ScheduledDay?.Date.ToLongDateString()</dd>
+                <dd class="col-sm-8">@Model?.Date.ToLongDateString()</dd>
 
                 <dt class="col-sm-4">Shift</dt>
                 <dd class="col-sm-8">@Model.ShiftDefinition?.Name</dd>

@@ -1,0 +1,22 @@
+﻿@model Turnus.Models.ScheduledShift
+
+<div class="d-flex justify-content-between align-items-center border-bottom py-1">
+    <div>
+        <strong>@Model.ShiftDefinition?.Name</strong>
+        <span class="text-muted">
+            (@Model.ShiftDefinition?.StartTime.ToString(@"hh\:mm")
+            - @Model.ShiftDefinition?.EndTime.ToString(@"hh\:mm"))
+        </span>
+        <span class="badge bg-secondary">@Model.Department?.Name</span>
+    </div>
+    <div>
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="DashboardSchedule.openReview(@Model.VenueId, '@Model.Date.ToString("yyyy-MM-dd")')">
+            Review / attendance
+        </button>
+        <button class="btn btn-sm btn-danger"
+                onclick="DashboardSchedule.openDeleteShiftModal(@Model.Id)">
+            Delete
+        </button>
+    </div>
+</div>

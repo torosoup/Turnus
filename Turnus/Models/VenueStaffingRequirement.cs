@@ -8,10 +8,10 @@ namespace Turnus.Models
         public int Id { get; set; }
 
         [Required]
-        public int VenueId { get; set; }
+        public int DepartmentId { get; set; }
 
-        [ForeignKey("VenueId")]
-        public Venue? Venue { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
 
         [Required]
         public int RoleId { get; set; }
@@ -23,8 +23,7 @@ namespace Turnus.Models
         [Range(1, 20)]
         public int RequiredCount { get; set; }
 
-        [Required]
         [Display(Name = "Needed per shift (not per day)")]
-        public bool IsShiftScoped { get; set; }
+        public bool IsShiftScoped { get; set; } = false; // change this later so needed per shift is default, and needed per day is optional
     }
 }

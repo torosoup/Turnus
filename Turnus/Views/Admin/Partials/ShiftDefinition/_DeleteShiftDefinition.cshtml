@@ -1,0 +1,8 @@
+﻿@model Turnus.Models.ShiftDefinition
+
+<h5 class="modal-title mb-3">Delete Shift Tempelate</h5>
+<form asp-action="Delete" asp-controller="ShiftDefinitions" method="post" id="shiftdefinition-delete-form">
+    <input type="hidden" asp-for="Id" />
+    <p>Delete shift definition <strong>@Model.Name</strong>?</p>
+    <button type="submit" class="btn btn-danger">Delete</button>
+</form>

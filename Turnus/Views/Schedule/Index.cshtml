@@ -75,9 +75,8 @@
                     @foreach (var day in Model.WeekDays)
                     {
                         var myShifts = Model.MyShiftAssignmentsForDay(day);
-                        var myDayAssignments = Model.MyDayAssignmentsForDay(day);
                         <td class="text-center align-middle">
-                            @if (!myShifts.Any() && !myDayAssignments.Any())
+                            @if (!myShifts.Any())
                             {
                                 <span class="text-muted small">No shift</span>
                             }
@@ -100,21 +99,11 @@
                                     class="badge bg-primary mb-1 d-block text-decoration-none"
                                     role="gridcell"
                                     tabindex="0"
-                                    aria-label="@a.ScheduledShift?.ScheduledDay?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
-                                        <div class="small">@a.ScheduledShift?.ScheduledDay?.Venue?.Name</div>
+                                    aria-label="@a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                        <div class="small">@a.ScheduledShift?.Venue?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
                                     </a>
-                                }
-                                @foreach (var a in myDayAssignments)
-                                {
-                                    <div class="badge bg-info mb-1 d-block"
-                                         role="gridcell"
-                                         tabindex="0"
-                                         aria-label="@a.ScheduledDay?.Venue?.Name @a.Role?.Name all day">
-                                        <div class="small">@a.ScheduledDay?.Venue?.Name</div>
-                                        <div class="small">@a.Role?.Name (all day)</div>
-                                    </div>
                                 }
                             }
                         </td>
@@ -137,8 +126,8 @@
                                        class="badge bg-warning text-dark mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
-                                       aria-label="Open slot: @shift.ScheduledDay?.Venue?.Name @shift.ShiftDefinition?.Name">
-                                        <div class="small">@shift.ScheduledDay?.Venue?.Name</div>
+                                       aria-label="Open slot: @shift.Venue?.Name @shift.ShiftDefinition?.Name">
+                                        <div class="small">@shift.Venue?.Name</div>
                                         <div class="small">@shift.ShiftDefinition?.Name</div>
                                         <div class="small">@shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime</div>
                                     </a>
@@ -162,7 +151,6 @@
                         @foreach (var day in Model.WeekDays)
                         {
                             var theirShifts = Model.ShiftAssignmentsForEmployeeOnDay(employee.Id, day);
-                            var theirDayAssignments = Model.DayAssignmentsForEmployeeOnDay(employee.Id, day);
                             <td class="text-center align-middle">
                                 @foreach (var a in theirShifts)
                                 {
@@ -182,23 +170,13 @@
                                     class="badge bg-secondary mb-1 d-block text-decoration-none"
                                     role="gridcell"
                                     tabindex="0"
-                                    aria-label="@a.ScheduledShift?.ScheduledDay?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
-                                        <div class="small">@a.ScheduledShift?.ScheduledDay?.Venue?.Name</div>
+                                    aria-label="@a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                        <div class="small">@a.ScheduledShift?.Venue?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
                                     </a>
                                 }
-                                @foreach (var a in theirDayAssignments)
-                                {
-                                    <div class="badge bg-secondary mb-1 d-block"
-                                         role="gridcell"
-                                         tabindex="0"
-                                         aria-label="@a.ScheduledDay?.Venue?.Name @a.Role?.Name all day">
-                                        <div class="small">@a.ScheduledDay?.Venue?.Name</div>
-                                        <div class="small">@a.Role?.Name (all day)</div>
-                                    </div>
-                                }
-                                @if (!theirShifts.Any() && !theirDayAssignments.Any())
+                                @if (!theirShifts.Any())
                                 {
                                     <span class="text-muted small">—</span>
                                 }

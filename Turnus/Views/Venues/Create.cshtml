@@ -1,48 +1,24 @@
-@model Turnus.Models.Venue
+﻿@model Turnus.Models.Venue
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Venue";
 }
 
-<h1>Create</h1>
-
-<h4>Venue</h4>
-<hr />
+<h1>Create Venue</h1>
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="VenueStaffingRequirements" class="control-label"></label>
-                <input asp-for="VenueStaffingRequirements" class="form-control" />
-                <span asp-validation-for="VenueStaffingRequirements" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="ShiftDefinitions" class="control-label"></label>
-                <input asp-for="ShiftDefinitions" class="form-control" />
-                <span asp-validation-for="ShiftDefinitions" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="ScheduledDays" class="control-label"></label>
-                <input asp-for="ScheduledDays" class="form-control" />
-                <span asp-validation-for="ScheduledDays" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>

@@ -1,0 +1,52 @@
+﻿@{
+    Layout = null;
+}
+
+@model Turnus.Controllers.AdminController.DashboardViewModel
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Venue settings</span>
+        <button class="btn btn-sm btn-primary"
+                onclick="DashboardVenues.openCreateModal()">
+            Create venue
+        </button>
+    </div>
+    <div class="card-body">
+        @if (!Model.Venues.Any())
+        {
+            <p>No venues defined.</p>
+        }
+        else
+        {
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var v in Model.Venues)
+                {
+                    <tr>
+                        <td>@v.Name</td>
+                        <td>@v.CreatedAt.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-secondary"
+                                    onclick="DashboardVenues.openEditModal(@v.Id)">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="DashboardVenues.openDeleteModal(@v.Id)">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

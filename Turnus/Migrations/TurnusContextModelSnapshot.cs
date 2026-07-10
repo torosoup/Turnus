@@ -254,7 +254,7 @@ namespace Turnus.Migrations
                     b.ToTable("Availability");
                 });
 
-            modelBuilder.Entity("Turnus.Models.DayAssignment", b =>
+            modelBuilder.Entity("Turnus.Models.Department", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -262,25 +262,19 @@ namespace Turnus.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("EmployeeId")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ScheduledDayId")
+                    b.Property<int>("VenueId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                    b.HasIndex("VenueId");
 
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("ScheduledDayId");
-
-                    b.ToTable("DayAssignment");
+                    b.ToTable("Department");
                 });
 
             modelBuilder.Entity("Turnus.Models.Role", b =>
@@ -291,35 +285,28 @@ namespace Turnus.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("Role");
-                });
-
-            modelBuilder.Entity("Turnus.Models.ScheduledDay", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("VenueId")
+                    b.Property<int?>("VenueId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("VenueId");
 
-                    b.ToTable("ScheduledDay");
+                    b.ToTable("Role");
                 });
 
             modelBuilder.Entity("Turnus.Models.ScheduledShift", b =>
@@ -330,17 +317,26 @@ namespace Turnus.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ScheduledDayId")
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
 
                     b.Property<int>("ShiftDefinitionId")
                         .HasColumnType("int");
 
+                    b.Property<int>("VenueId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ScheduledDayId");
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("ShiftDefinitionId");
+
+                    b.HasIndex("VenueId", "Date", "ShiftDefinitionId")
+                        .IsUnique();
 
                     b.ToTable("ScheduledShift");
                 });
@@ -382,6 +378,9 @@ namespace Turnus.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
 
@@ -393,12 +392,9 @@ namespace Turnus.Migrations
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
-                    b.Property<int>("VenueId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("VenueId");
+                    b.HasIndex("DepartmentId");
 
                     b.ToTable("ShiftDefinition");
                 });
@@ -410,6 +406,9 @@ namespace Turnus.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -429,6 +428,9 @@ namespace Turnus.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsShiftScoped")
                         .HasColumnType("bit");
 
@@ -438,14 +440,11 @@ namespace Turnus.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("VenueId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("DepartmentId");
 
-                    b.HasIndex("VenueId");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("VenueStaffingRequirement");
                 });
@@ -510,7 +509,7 @@ namespace Turnus.Migrations
                         .IsRequired();
 
                     b.HasOne("Turnus.Models.ScheduledShift", "ScheduledShift")
-                        .WithMany()
+                        .WithMany("Availabilities")
                         .HasForeignKey("ScheduledShiftId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -520,37 +519,10 @@ namespace Turnus.Migrations
                     b.Navigation("ScheduledShift");
                 });
 
-            modelBuilder.Entity("Turnus.Models.DayAssignment", b =>
-                {
-                    b.HasOne("Turnus.Models.ApplicationUser", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Turnus.Models.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Turnus.Models.ScheduledDay", "ScheduledDay")
-                        .WithMany()
-                        .HasForeignKey("ScheduledDayId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Role");
-
-                    b.Navigation("ScheduledDay");
-                });
-
-            modelBuilder.Entity("Turnus.Models.ScheduledDay", b =>
+            modelBuilder.Entity("Turnus.Models.Department", b =>
                 {
                     b.HasOne("Turnus.Models.Venue", "Venue")
-                        .WithMany("ScheduledDays")
+                        .WithMany("Departments")
                         .HasForeignKey("VenueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -558,13 +530,28 @@ namespace Turnus.Migrations
                     b.Navigation("Venue");
                 });
 
+            modelBuilder.Entity("Turnus.Models.Role", b =>
+                {
+                    b.HasOne("Turnus.Models.Department", "Department")
+                        .WithMany("Roles")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Turnus.Models.Venue", "Venue")
+                        .WithMany()
+                        .HasForeignKey("VenueId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Venue");
+                });
+
             modelBuilder.Entity("Turnus.Models.ScheduledShift", b =>
                 {
-                    b.HasOne("Turnus.Models.ScheduledDay", "ScheduledDay")
-                        .WithMany("ScheduledShifts")
-                        .HasForeignKey("ScheduledDayId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Turnus.Models.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId");
 
                     b.HasOne("Turnus.Models.ShiftDefinition", "ShiftDefinition")
                         .WithMany()
@@ -572,9 +559,17 @@ namespace Turnus.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ScheduledDay");
+                    b.HasOne("Turnus.Models.Venue", "Venue")
+                        .WithMany("ScheduledShifts")
+                        .HasForeignKey("VenueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
 
                     b.Navigation("ShiftDefinition");
+
+                    b.Navigation("Venue");
                 });
 
             modelBuilder.Entity("Turnus.Models.ShiftAssignment", b =>
@@ -592,7 +587,7 @@ namespace Turnus.Migrations
                         .IsRequired();
 
                     b.HasOne("Turnus.Models.ScheduledShift", "ScheduledShift")
-                        .WithMany()
+                        .WithMany("ShiftAssignments")
                         .HasForeignKey("ScheduledShiftId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -606,46 +601,55 @@ namespace Turnus.Migrations
 
             modelBuilder.Entity("Turnus.Models.ShiftDefinition", b =>
                 {
-                    b.HasOne("Turnus.Models.Venue", "Venue")
+                    b.HasOne("Turnus.Models.Department", "Department")
                         .WithMany("ShiftDefinitions")
-                        .HasForeignKey("VenueId")
+                        .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Venue");
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("Turnus.Models.VenueStaffingRequirement", b =>
                 {
+                    b.HasOne("Turnus.Models.Department", "Department")
+                        .WithMany("VenueStaffingRequirements")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Turnus.Models.Role", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Turnus.Models.Venue", "Venue")
-                        .WithMany("VenueStaffingRequirements")
-                        .HasForeignKey("VenueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Department");
 
                     b.Navigation("Role");
-
-                    b.Navigation("Venue");
                 });
 
-            modelBuilder.Entity("Turnus.Models.ScheduledDay", b =>
+            modelBuilder.Entity("Turnus.Models.Department", b =>
                 {
-                    b.Navigation("ScheduledShifts");
-                });
-
-            modelBuilder.Entity("Turnus.Models.Venue", b =>
-                {
-                    b.Navigation("ScheduledDays");
+                    b.Navigation("Roles");
 
                     b.Navigation("ShiftDefinitions");
 
                     b.Navigation("VenueStaffingRequirements");
+                });
+
+            modelBuilder.Entity("Turnus.Models.ScheduledShift", b =>
+                {
+                    b.Navigation("Availabilities");
+
+                    b.Navigation("ShiftAssignments");
+                });
+
+            modelBuilder.Entity("Turnus.Models.Venue", b =>
+                {
+                    b.Navigation("Departments");
+
+                    b.Navigation("ScheduledShifts");
                 });
 #pragma warning restore 612, 618
         }
