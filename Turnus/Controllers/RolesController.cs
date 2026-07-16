@@ -43,7 +43,7 @@ public class RolesController : Controller
         ViewBag.Departments = await _context.Department.ToListAsync();
 
         return PartialView(
-            "~/Views/Admin/Partials/Role/_CreateRole.cshtml",
+            "~/Views/Admin/Partials/Configuration/Role/_CreateRole.cshtml",
             new Role());
     }
 
@@ -66,7 +66,7 @@ public class RolesController : Controller
         ViewBag.Departments = await _context.Department.ToListAsync();
 
         return PartialView(
-            "~/Views/Admin/Partials/Role/_CreateRole.cshtml",
+            "~/Views/Admin/Partials/Configuration/Role/_CreateRole.cshtml",
             role);
     }
 
@@ -89,7 +89,7 @@ public class RolesController : Controller
         ViewBag.Departments = await _context.Department.ToListAsync();
 
         return PartialView(
-            "~/Views/Admin/Partials/Role/_EditRole.cshtml",
+            "~/Views/Admin/Partials/Configuration/Role/_EditRole.cshtml",
             role);
     }
 
@@ -129,7 +129,7 @@ public class RolesController : Controller
         ViewBag.Departments = await _context.Department.ToListAsync();
 
         return PartialView(
-            "~/Views/Admin/Partials/Role/_EditRole.cshtml",
+            "~/Views/Admin/Partials/Configuration/Role/_EditRole.cshtml",
             role);
     }
 
@@ -148,7 +148,7 @@ public class RolesController : Controller
             return NotFound();
         }
 
-        return PartialView("~/Views/Admin/Partials/Role/_DeleteRole.cshtml", role);
+        return PartialView("~/Views/Admin/Partials/Configuration/Role/_DeleteRole.cshtml", role);
     }
 
     // POST: ROLES/Delete/5

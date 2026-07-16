@@ -1,0 +1,69 @@
+﻿@model Turnus.Models.AvailableEmployeesViewModel
+
+@{
+    var isFull = Model.Assigned.Count >= Model.Requirement.RequiredCount;
+}
+
+@if (!Model.Available.Any())
+{
+    <p class="text-muted small">
+        No one available.
+    </p>
+}
+else
+{
+    <div class="d-flex flex-wrap gap-2">
+
+        @foreach (var availableEmployee in Model.Available)
+        {
+            var alreadyAssigned = Model.Assigned.Any(a =>
+                a.EmployeeId == availableEmployee.EmployeeId);
+
+            <button class="btn btn-sm @((alreadyAssigned || isFull) ? "btn-secondary" : "btn-success")"
+                    onclick="DashboardShiftAssignment.openAssignModal(
+                @Model.Shift.Id,
+                @Model.Requirement.RoleId,
+                @Model.Venue.Id,
+                '@Model.Date.ToString("yyyy-MM-dd")',
+                '@availableEmployee.EmployeeId')"
+                    disabled="@(alreadyAssigned || isFull)">
+
+                @if (alreadyAssigned)
+                {
+                    <text>✓ @availableEmployee.Employee?.Email</text>
+                }
+                else if (isFull)
+                {
+                    <text>Full</text>
+                }
+                else
+                {
+                    @availableEmployee.Employee?.Email
+                }
+
+            </button>
+        }
+
+    </div>
+
+    <div class="mt-2">
+        <button class="btn btn-sm btn-primary"
+                onclick="DashboardShiftAssignment.openAssignModal(
+            @Model.Shift.Id,
+            @Model.Requirement.RoleId,
+            @Model.Venue.Id,
+            '@Model.Date.ToString("yyyy-MM-dd")')"
+            @(isFull ? "disabled" : "")>
+
+            Assign
+
+        </button>
+    </div>
+
+    @if (isFull)
+    {
+        <div class="text-success small mt-2">
+            ✓ Required staffing reached.
+        </div>
+    }
+}

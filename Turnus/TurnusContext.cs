@@ -42,4 +42,6 @@ public class TurnusContext(DbContextOptions<TurnusContext> options) : IdentityDb
             .HasForeignKey(r => r.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
     }
+
+
 }

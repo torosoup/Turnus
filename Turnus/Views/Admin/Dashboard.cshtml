@@ -5,47 +5,126 @@
 }
 
 <section class="py-4 bg-light">
-    <div id="admin-dashboard" class="container mt-4">
-        <h2>Admin Dashboard</h2>
+    <div id="admin-dashboard" class="container-fluid">
 
-        <!-- Venue selector -->
-        <div class="mb-3">
-            <label for="venueSelect" class="form-label">Select venue</label>
-            <select id="venueSelect" class="form-select"
-                    onchange="Dashboard.changeVenue(this.value)">
-                @foreach (var v in Model.Venues)
+        <div class="row">
+
+            <!-- Sidebar -->
+            <div class="col-lg-3 col-xl-2 mb-4">
+                <partial name="Partials/_Sidebar" />
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9 col-xl-10">
+
+                <h2 class="mb-4">Admin Dashboard</h2>
+
+                <!-- Venue selector -->
+                <div class="card mb-4">
+                    <div class="card-body">
+
+                        <label for="venueSelect" class="form-label">
+                            Selected venue
+                        </label>
+
+                        <select id="venueSelect"
+                                class="form-select"
+                                onchange="Dashboard.changeVenue(this.value)">
+
+                            @foreach (var v in Model.Venues)
+                            {
+                                <option value="@v.Id"
+                                        selected="@(Model.SelectedVenue?.Id == v.Id)">
+                                    @v.Name
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+                </div>
+
+
+                <!-- Department selector -->
+                @if (Model.Departments.Any())
                 {
-                    <option value="@v.Id" selected="@(Model.SelectedVenue?.Id == v.Id)">
-                        @v.Name
-                    </option>
+                    <div class="card mb-4">
+                        <div class="card-body">
+
+                            <label for="departmentSelect" class="form-label">
+                                Selected department
+                            </label>
+
+                            <select id="departmentSelect"
+                                    class="form-select"
+                                    onchange="Dashboard.changeDepartment(this.value)">
+
+                                @foreach (var d in Model.Departments)
+                                {
+                                    <option value="@d.Id"
+                                            selected="@(Model.SelectedDepartment?.Id == d.Id)">
+                                        @d.Name
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+                    </div>
                 }
-            </select>
+
+                <!-- Configuration -->
+                <div id="configuration-section">
+
+                    <partial name="Partials/Configuration/_VenueSettingsSection" model="Model" />
+                    <partial name="Partials/Configuration/_DepartmentsSection" model="Model" />
+                    <partial name="Partials/Configuration/_RolesSection" model="Model" />
+                    <partial name="Partials/Configuration/_ShiftDefinitionsSection" model="Model" />
+                    <partial name="Partials/Configuration/_StaffingRequirementsSection" model="Model" />
+
+                </div>
+
+                <!-- User Management (future) -->
+                <div id="user-management-section" style="display:none;">
+                </div>
+
+                <!-- Schedule -->
+                <div id="schedule-section-wrapper">
+
+                    <partial name="Partials/ScheduleManagement/_ScheduleSection"
+                             model="Model" />
+
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- AJAX-loaded sections -->
-        <partial name="_VenueSettingsSection" model="Model" />
-        <partial name="_DepartmentsSection" model="Model" />
-        <partial name="_RolesSection" model="Model" />
-        <partial name="_ShiftDefinitionsSection" model="Model" />
-        <partial name="_StaffingRequirementsSection" model="Model" />
-        <partial name="_ScheduleSection" model="Model" />
-
-        <!-- Modal container -->
+        <!-- Shared modal -->
         <div id="dashboard-modal-container"></div>
+
     </div>
 </section>
 
 @section Scripts {
+
     <script src="~/js/modal.js"></script>
+
     <script src="~/js/dashboard.js"></script>
+
     <script src="~/js/dashboard.venues.js"></script>
     <script src="~/js/dashboard.departments.js"></script>
     <script src="~/js/dashboard.roles.js"></script>
-    <script src="~/js/dashboard.schedule.js"></script>
     <script src="~/js/dashboard.shiftdefinitions.js"></script>
     <script src="~/js/dashboard.staffing.js"></script>
+
+    <script src="~/js/dashboard.schedule.js"></script>
     <script src="~/js/dashboard.scheduledshift.js"></script>
     <script src="~/js/dashboard.assignments.js"></script>
+
+    <script src="~/js/dashboard.schedulereview.js"></script>
+    <script src="~/js/dashboard.shiftassignment.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
         const venueId = @Model.SelectedVenue?.Id ?? 0;

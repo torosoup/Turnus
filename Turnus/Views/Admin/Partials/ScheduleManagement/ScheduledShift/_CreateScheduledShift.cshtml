@@ -2,6 +2,7 @@
 
 <form asp-action="Create" asp-controller="ScheduledShifts" method="post" id="scheduledshift-create-form">
     <input type="hidden" asp-for="VenueId" />
+    <input type="hidden" asp-for="DepartmentId" />
 
     <div class="mb-3">
         <label asp-for="Date" class="form-label"></label>

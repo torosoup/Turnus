@@ -15,18 +15,34 @@ namespace Turnus.Controllers
 
         public async Task<IActionResult> Create(int departmentId)
         {
-            ViewBag.Roles = await _context.Role.ToListAsync();
-            return PartialView("~/Views/Admin/Partials/StaffingRequirement/_CreateStaffingRequirement.cshtml",
+            ViewBag.Roles = await _context.Role
+                .Where(r => r.DepartmentId == departmentId)
+                .ToListAsync();
+
+            return PartialView("~/Views/Admin/Partials/Configuration/StaffingRequirement/_CreateStaffingRequirement.cshtml",
                 new VenueStaffingRequirement { DepartmentId = departmentId });
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(VenueStaffingRequirement model)
         {
+            var role = await _context.Role.FindAsync(model.RoleId);
+
+            if (role == null || role.DepartmentId != model.DepartmentId)
+            {
+                ModelState.AddModelError("RoleId",
+                    "Selected role does not belong to this department.");
+            }
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = await _context.Role.ToListAsync();
-                return PartialView("~/Views/Admin/Partials/StaffingRequirement/_CreateStaffingRequirement.cshtml", model);
+                ViewBag.Roles = await _context.Role
+                    .Where(r => r.DepartmentId == model.DepartmentId)
+                    .ToListAsync();
+
+                return PartialView(
+                    "~/Views/Admin/Partials/Configuration/StaffingRequirement/_CreateStaffingRequirement.cshtml",
+                    model);
             }
 
             _context.VenueStaffingRequirement.Add(model);
@@ -43,23 +59,36 @@ namespace Turnus.Controllers
 
             ViewBag.Roles = await _context.Role.ToListAsync();
 
-            return PartialView("~/Views/Admin/Partials/StaffingRequirement/_EditStaffingRequirement.cshtml", req);
+            return PartialView("~/Views/Admin/Partials/Configuration/StaffingRequirement/_EditStaffingRequirement.cshtml", req);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(VenueStaffingRequirement model)
-        {
-            if (!ModelState.IsValid)
-            {
-                ViewBag.Roles = await _context.Role.ToListAsync();
-                return PartialView("~/Views/Admin/Partials/StaffingRequirement/_EditStaffingRequirement.cshtml", model);
-            }
+public async Task<IActionResult> Edit(VenueStaffingRequirement model)
+{
+    var role = await _context.Role.FindAsync(model.RoleId);
 
-            _context.Update(model);
-            await _context.SaveChangesAsync();
+    if (role == null || role.DepartmentId != model.DepartmentId)
+    {
+        ModelState.AddModelError("RoleId",
+            "Selected role does not belong to this department.");
+    }
 
-            return RedirectToAction("Dashboard", "Admin");
-        }
+    if (!ModelState.IsValid)
+    {
+        ViewBag.Roles = await _context.Role
+            .Where(r => r.DepartmentId == model.DepartmentId)
+            .ToListAsync();
+
+        return PartialView(
+            "~/Views/Admin/Partials/Configuration/StaffingRequirement/_EditStaffingRequirement.cshtml",
+            model);
+    }
+
+    _context.Update(model);
+    await _context.SaveChangesAsync();
+
+    return RedirectToAction("Dashboard", "Admin");
+}
 
         public async Task<IActionResult> Delete(int id)
         {
@@ -67,7 +96,7 @@ namespace Turnus.Controllers
                 .Include(r => r.Role)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
-            return PartialView("~/Views/Admin/Partials/StaffingRequirement/_DeleteStaffingRequirement.cshtml", req);
+            return PartialView("~/Views/Admin/Partials/Configuration/StaffingRequirement/_DeleteStaffingRequirement.cshtml", req);
         }
 
         [HttpPost]

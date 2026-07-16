@@ -18,7 +18,7 @@ namespace Turnus.Controllers
         // ---------------------------
         // MAIN DASHBOARD VIEW
         // ---------------------------
-        public async Task<IActionResult> Dashboard(int? venueId)
+        public async Task<IActionResult> Dashboard(int? venueId, int? departmentId)
         {
             var venues = await _context.Venue.ToListAsync();
 
@@ -26,9 +26,23 @@ namespace Turnus.Controllers
                 ? venues.FirstOrDefault(v => v.Id == venueId.Value)
                 : venues.FirstOrDefault();
 
-            var model = await BuildDashboardModel(selectedVenue?.Id ?? 0);
+            var departments = await _context.Department
+                .Where(d => d.VenueId == selectedVenue!.Id)
+                .ToListAsync();
+
+            var selectedDepartment = departments
+                .FirstOrDefault(d => d.Id == departmentId)
+                ?? departments.FirstOrDefault();
+
+            var model = await BuildDashboardModel(
+                selectedVenue?.Id ?? 0,
+                selectedDepartment?.Id
+            );
+
             model.Venues = venues;
             model.SelectedVenue = selectedVenue;
+            model.Departments = departments;
+            model.SelectedDepartment = selectedDepartment;
 
             return View(model);
         }
@@ -39,69 +53,112 @@ namespace Turnus.Controllers
         public async Task<IActionResult> VenueSettingsSection(int venueId)
         {
             var model = await BuildDashboardModel(venueId);
-            return PartialView("_VenueSettingsSection", model);
+            return PartialView("Partials/Configuration/_VenueSettingsSection", model);
         }
 
         public async Task<IActionResult> DepartmentsSection(int venueId)
         {
             var model = await BuildDashboardModel(venueId);
-            return PartialView("_DepartmentsSection", model);
+            return PartialView("Partials/Configuration/_DepartmentsSection", model);
         }
 
-        public async Task<IActionResult> RolesSection(int venueId)
+        public async Task<IActionResult> RolesSection(int venueId, int? departmentId)
         {
-            var model = await BuildDashboardModel(venueId);
-            return PartialView("_RolesSection", model);
+            var model = await BuildDashboardModel(venueId, departmentId);
+            return PartialView("Partials/Configuration/_RolesSection", model);
         }
 
-        public async Task<IActionResult> ShiftDefinitionsSection(int venueId)
+        public async Task<IActionResult> ShiftDefinitionsSection(int venueId, int? departmentId)
         {
-            var model = await BuildDashboardModel(venueId);
-            return PartialView("_ShiftDefinitionsSection", model);
+            var model = await BuildDashboardModel(venueId, departmentId);
+            return PartialView("Partials/Configuration/_ShiftDefinitionsSection", model);
         }
 
-        public async Task<IActionResult> StaffingRequirementsSection(int venueId)
+        public async Task<IActionResult> StaffingRequirementsSection(int venueId, int? departmentId)
         {
-            var model = await BuildDashboardModel(venueId);
-            return PartialView("_StaffingRequirementsSection", model);
+            var model = await BuildDashboardModel(venueId, departmentId);
+            return PartialView("Partials/Configuration/_StaffingRequirementsSection", model);
         }
 
-        public async Task<IActionResult> ScheduleSection(int venueId)
+        public async Task<IActionResult> ScheduleSection(int venueId, int? departmentId)
         {
-            var model = await BuildDashboardModel(venueId);
-            return PartialView("_ScheduleSection", model);
+            var model = await BuildDashboardModel(venueId, departmentId);
+            return PartialView("Partials/ScheduleManagement/_ScheduleSection", model);
         }
 
         // ---------------------------
         // SHARED MODEL BUILDER
         // ---------------------------
-        private async Task<DashboardViewModel> BuildDashboardModel(int venueId)
+        private async Task<DashboardViewModel> BuildDashboardModel(int venueId, int? departmentId = null)
         {
             var venues = await _context.Venue.ToListAsync();
             var selectedVenue = venues.FirstOrDefault(v => v.Id == venueId);
 
-            var roles = await _context.Role.ToListAsync();
+            var rolesQuery = _context.Role.AsQueryable(); // :)
+
+            if (departmentId.HasValue)
+            {
+                rolesQuery = rolesQuery
+                    .Where(r => r.DepartmentId == departmentId);
+            }
+
+            var roles = await rolesQuery.ToListAsync();
             var departments = await _context.Department.Where(d => d.VenueId == venueId).ToListAsync();
             var departmentIds = departments.Select(d => d.Id).ToList();
 
-            var shiftDefinitions = await _context.ShiftDefinition
+            var shiftDefinitionsQuery = _context.ShiftDefinition
                 .Include(s => s.Department)
-                .Where(s => departmentIds.Contains(s.DepartmentId))
-                .ToListAsync();
+                .AsQueryable();
 
-            var staffingRequirements = await _context.VenueStaffingRequirement
+            if (departmentId.HasValue)
+            {
+                shiftDefinitionsQuery = shiftDefinitionsQuery
+                    .Where(s => s.DepartmentId == departmentId);
+            }
+            else
+            {
+                shiftDefinitionsQuery = shiftDefinitionsQuery
+                    .Where(s => departmentIds.Contains(s.DepartmentId));
+            }
+
+            var shiftDefinitions = await shiftDefinitionsQuery.ToListAsync();
+
+            var staffingRequirementsQuery = _context.VenueStaffingRequirement
                 .Include(r => r.Role)
                 .Include(r => r.Department)
-                .Where(r => departmentIds.Contains(r.DepartmentId))
-                .ToListAsync();
+                .AsQueryable();
+
+            if (departmentId.HasValue)
+            {
+                staffingRequirementsQuery = staffingRequirementsQuery
+                    .Where(r => r.DepartmentId == departmentId);
+            }
+            else
+            {
+                staffingRequirementsQuery = staffingRequirementsQuery
+                    .Where(r => departmentIds.Contains(r.DepartmentId));
+            }
+
+            var staffingRequirements = await staffingRequirementsQuery.ToListAsync();
 
             var today = DateTime.Today;
             var maxDate = today.AddMonths(6);
 
-            var scheduledShifts = await _context.ScheduledShift
+            var scheduledShiftsQuery = _context.ScheduledShift
                 .Include(s => s.Department)
                 .Include(s => s.ShiftDefinition)
-                .Where(s => s.VenueId == venueId && s.Date >= today && s.Date <= maxDate)
+                .Where(s => s.VenueId == venueId &&
+                            s.Date >= today &&
+                            s.Date <= maxDate);
+
+
+            if (departmentId.HasValue)
+            {
+                scheduledShiftsQuery = scheduledShiftsQuery
+                    .Where(s => s.DepartmentId == departmentId);
+            }
+
+            var scheduledShifts = await scheduledShiftsQuery
                 .OrderBy(s => s.Date)
                 .ToListAsync();
 
@@ -135,6 +192,7 @@ namespace Turnus.Controllers
             public List<Venue> Venues { get; set; } = new();
             public Venue? SelectedVenue { get; set; }
             public List<Role> Roles { get; set; } = new();
+            public Department? SelectedDepartment { get; set; }
             public List<Department> Departments { get; set; } = new();
             public List<ShiftDefinition> ShiftDefinitions { get; set; } = new();
             public List<VenueStaffingRequirement> StaffingRequirements { get; set; } = new();

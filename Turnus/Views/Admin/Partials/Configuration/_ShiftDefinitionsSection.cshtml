@@ -1,0 +1,79 @@
+﻿@model Turnus.Controllers.AdminController.DashboardViewModel
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Shift Definitions</span>
+    </div>
+
+    <div class="card-body">
+
+        @if (Model.SelectedDepartment == null)
+        {
+            <p>No department selected.</p>
+        }
+        else
+        {
+            var dept = Model.SelectedDepartment;
+
+            <div class="mb-3 border rounded p-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>@dept.Name</strong>
+
+                    <button class="btn btn-sm btn-primary"
+                            onclick="DashboardShiftDefinitions.openCreateModal(@dept.Id)">
+                        Add shift definition
+                    </button>
+                </div>
+
+
+                @if (!Model.ShiftDefinitions.Any(s => s.DepartmentId == dept.Id))
+                {
+                    <p class="text-muted">No shift definitions.</p>
+                }
+                else
+                {
+                    <table class="table table-sm mt-2">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var sd in Model.ShiftDefinitions
+                                .Where(s => s.DepartmentId == dept.Id))
+                            {
+                                <tr>
+                                    <td>@sd.Name</td>
+                                    <td>@sd.StartTime</td>
+                                    <td>@sd.EndTime</td>
+
+                                    <td class="text-end">
+
+                                        <button class="btn btn-sm btn-secondary"
+                                                onclick="DashboardShiftDefinitions.openEditModal(@sd.Id)">
+                                            Edit
+                                        </button>
+
+                                        <button class="btn btn-sm btn-danger"
+                                                onclick="DashboardShiftDefinitions.openDeleteModal(@sd.Id)">
+                                            Delete
+                                        </button>
+
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+
+            </div>
+        }
+
+    </div>
+</div>

@@ -19,7 +19,7 @@ namespace Turnus.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string? week = null)
+        public async Task<IActionResult> Index(string? week = null, int? venueId = null)
         {
             var today = DateTime.Today;
             DateTime weekStart;
@@ -50,7 +50,7 @@ namespace Turnus.Controllers
 
             var currentUserId = _userManager.GetUserId(User);
 
-            var scheduledShifts = await _context.ScheduledShift
+            var scheduledShiftsQuery = _context.ScheduledShift
                 .Include(s => s.Venue)
                 .Include(s => s.Department)
                 .Include(s => s.ShiftDefinition)
@@ -58,8 +58,16 @@ namespace Turnus.Controllers
                     .ThenInclude(a => a.Employee)
                 .Include(s => s.ShiftAssignments)
                     .ThenInclude(a => a.Role)
-                .Where(s => s.Date >= weekStart && s.Date <= weekEnd)
-                .ToListAsync();
+                .Where(s => s.Date.Date >= weekStart.Date &&
+                            s.Date.Date <= weekEnd.Date);
+
+            if (venueId.HasValue)
+            {
+                scheduledShiftsQuery = scheduledShiftsQuery
+                    .Where(s => s.VenueId == venueId.Value);
+            }
+
+            var scheduledShifts = await scheduledShiftsQuery.ToListAsync();
 
             var departmentIds = scheduledShifts
                 .Where(s => s.DepartmentId.HasValue)
@@ -108,22 +116,33 @@ namespace Turnus.Controllers
                     .ThenInclude(a => a.Role)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (shift == null) return NotFound();
+            if (shift == null)
+                return NotFound();
+
+            //  throw new Exception($"Shift ID: {shift.Id}, DepartmentId: {shift.DepartmentId}");
+
+            // Console.WriteLine($"Shift ID: {shift.Id}");
+            // Console.WriteLine($"Shift DepartmentId: {shift.DepartmentId}");
 
             var requirements = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
-                .Where(r => shift.DepartmentId != null && r.DepartmentId == shift.DepartmentId)
+                .Where(r => shift.DepartmentId != null &&
+                            r.DepartmentId == shift.DepartmentId)
                 .ToListAsync();
 
+            // Console.WriteLine($"Requirements found: {requirements.Count}");
+
             var myAvailability = await _context.Availability
-                .FirstOrDefaultAsync(a => a.EmployeeId == currentUserId && a.ScheduledShiftId == id);
+                .FirstOrDefaultAsync(a =>
+                    a.EmployeeId == currentUserId &&
+                    a.ScheduledShiftId == id);
 
             ViewBag.Requirements = requirements;
             ViewBag.MyAvailability = myAvailability;
             ViewBag.CurrentUserId = currentUserId;
-            ViewBag.ReturnWeek = week ?? string.Empty;
+            ViewBag.ReturnWeek = week ?? "";
 
-            return View(shift);
+            return PartialView("~/Views/Schedule/Partial/_ShiftDetail.cshtml", shift);
         }
 
         // Nested view model — not a separate model file
@@ -171,11 +190,24 @@ namespace Turnus.Controllers
 
             public bool ShiftHasOpenSlots(ScheduledShift shift, List<VenueStaffingRequirement> requirements)
             {
-                foreach (var req in requirements.Where(r => r.IsShiftScoped))
+                var shiftRequirements = requirements
+                    .Where(r => r.IsShiftScoped)
+                    .ToList();
+
+                if (!shiftRequirements.Any())
                 {
-                    var assigned = shift.ShiftAssignments.Count(a => a.RoleId == req.RoleId);
-                    if (assigned < req.RequiredCount) return true;
+                    return false;
                 }
+
+                foreach (var req in shiftRequirements)
+                {
+                    var assigned = shift.ShiftAssignments
+                        .Count(a => a.RoleId == req.RoleId);
+
+                    if (assigned < req.RequiredCount)
+                        return true;
+                }
+
                 return false;
             }
         }
@@ -196,6 +228,35 @@ namespace Turnus.Controllers
         private static string FormatWeek(DateTime monday)
         {
             return $"{monday.Year}-W{ISOWeek.GetWeekOfYear(monday):D2}";
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetAvailability(int scheduledShiftId, bool isAvailable, string? week = null)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var existing = await _context.Availability
+                .FirstOrDefaultAsync(a =>
+                    a.EmployeeId == userId &&
+                    a.ScheduledShiftId == scheduledShiftId);
+
+            if (existing != null)
+            {
+                existing.IsAvailable = isAvailable;
+            }
+            else
+            {
+                _context.Availability.Add(new Availability
+                {
+                    EmployeeId = userId!,
+                    ScheduledShiftId = scheduledShiftId,
+                    IsAvailable = isAvailable
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Schedule", new { week = week });
         }
     }
 }

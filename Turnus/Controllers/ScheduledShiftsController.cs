@@ -13,13 +13,22 @@ namespace Turnus.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Create(int venueId, DateTime date)
+        public async Task<IActionResult> Create(int venueId, int departmentId, DateTime date)
         {
-            var shiftDefs = await _context.ShiftDefinition.ToListAsync();
+            var shiftDefs = await _context.ShiftDefinition
+                .Where(s => s.DepartmentId == departmentId)
+                .ToListAsync();
+
             ViewBag.ShiftDefinitions = shiftDefs;
 
-            return PartialView("~/Views/Admin/Partials/ScheduledShift/_CreateScheduledShift.cshtml",
-                new ScheduledShift { VenueId = venueId, Date = date });
+            return PartialView(
+                "~/Views/Admin/Partials/ScheduleManagement/ScheduledShift/_CreateScheduledShift.cshtml",
+                new ScheduledShift
+                {
+                    VenueId = venueId,
+                    DepartmentId = departmentId,
+                    Date = date
+                });
         }
 
         [HttpPost]
@@ -28,7 +37,7 @@ namespace Turnus.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.ShiftDefinitions = await _context.ShiftDefinition.ToListAsync();
-                return PartialView("~/Views/Admin/Partials/ScheduledShift/_CreateScheduledShift.cshtml", model);
+                return PartialView("~/Views/Admin/Partials/ScheduleManagement/ScheduledShift/_CreateScheduledShift.cshtml", model);
             }
 
             _context.ScheduledShift.Add(model);
@@ -43,7 +52,7 @@ namespace Turnus.Controllers
                 .Include(s => s.ShiftDefinition)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
-            return PartialView("~/Views/Admin/Partials/ScheduledShift/_DeleteScheduledShift.cshtml", shift);
+            return PartialView("~/Views/Admin/Partials/ScheduleManagement/ScheduledShift/_DeleteScheduledShift.cshtml", shift);
         }
 
         [HttpPost]

@@ -42,7 +42,7 @@ namespace Turnus.Controllers
         public IActionResult Create(int? venueId)
         {
             ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", venueId);
-            return PartialView("~/Views/Admin/Partials/Department/_CreateDepartment.cshtml");
+            return PartialView("~/Views/Admin/Partials/Configuration/Department/_CreateDepartment.cshtml");
         }
 
         [HttpPost]
@@ -53,10 +53,10 @@ namespace Turnus.Controllers
             {
                 _context.Add(department);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "Admin");
             }
             ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
-            return PartialView("~/Views/Admin/Partials/Department/_CreateDepartment.cshtml", department);
+            return PartialView("~/Views/Admin/Partials/Configuration/Department/_CreateDepartment.cshtml", department);
         }
 
         public async Task<IActionResult> Edit(int? id)
@@ -67,7 +67,7 @@ namespace Turnus.Controllers
             if (department == null) return NotFound();
 
             ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
-            return PartialView("~/Views/Admin/Partials/Department/_EditDepartment.cshtml", department);
+            return PartialView("~/Views/Admin/Partials/Configuration/Department/_EditDepartment.cshtml", department);
         }
 
         [HttpPost]
@@ -88,10 +88,10 @@ namespace Turnus.Controllers
                     if (!_context.Department.Any(e => e.Id == id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "Admin");
             }
             ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
-            return PartialView("~/Views/Admin/Partials/Department/_EditDepartment.cshtml", department);
+            return PartialView("~/Views/Admin/Partials/Configuration/Department/_EditDepartment.cshtml", department);
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -104,7 +104,7 @@ namespace Turnus.Controllers
 
             if (department == null) return NotFound();
 
-            return PartialView("~/Views/Admin/Partials/Department/_DeleteDepartment.cshtml", department);
+            return PartialView("~/Views/Admin/Partials/Configuration/Department/_DeleteDepartment.cshtml", department);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -114,7 +114,7 @@ namespace Turnus.Controllers
             var department = await _context.Department.FindAsync(id);
             if (department != null) _context.Department.Remove(department);
             await _context.SaveChangesAsync();
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Dashboard", "Admin");
         }
     }
 }

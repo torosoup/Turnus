@@ -6,11 +6,7 @@
 
 <div class="mb-2 border rounded">
     <div class="d-flex justify-content-between align-items-center p-2 bg-light">
-        <span>@date.ToString("yyyy-MM-dd")</span>
-        <button class="btn btn-sm btn-primary"
-                onclick="DashboardSchedule.openCreateShiftModal('@date.ToString("yyyy-MM-dd")')">
-            Add shift
-        </button>
+        <span>@date.ToString("yyyy-MM-dd")</span>  
         <button class="btn btn-sm btn-outline-secondary"
                 data-bs-toggle="collapse"
                 data-bs-target="#day-@date.ToString("yyyyMMdd")">
@@ -21,7 +17,7 @@
         <div class="p-2">
             @foreach (var shift in Model)
             {
-                <partial name="_ShiftRow" model="shift" />
+                <partial name="Partials/ScheduleManagement/_ShiftRow" model="shift" />
             }
         </div>
     </div>
