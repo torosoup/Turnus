@@ -93,13 +93,12 @@
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
                                     </div> *@
 
-                                    <a asp-action="ShiftDetail"
-                                    asp-route-id="@a.ScheduledShiftId"
-                                    asp-route-week="@Model.CurrentWeek"
-                                    class="badge bg-primary mb-1 d-block text-decoration-none"
-                                    role="gridcell"
-                                    tabindex="0"
-                                    aria-label="@a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                    <a href="#"
+                                       onclick="openShiftDetail(@a.ScheduledShiftId, '@Model.CurrentWeek')"
+                                       class="badge bg-primary mb-1 d-block text-decoration-none"
+                                       role="gridcell"
+                                       tabindex="0"
+                                       aria-label="My shift: @a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
                                         <div class="small">@a.ScheduledShift?.Venue?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
@@ -116,20 +115,27 @@
                     @foreach (var day in Model.WeekDays)
                     {
                         var shiftsThisDay = Model.ShiftsForDay(day);
-                        var hasOpenSlots = shiftsThisDay.Any(s => Model.ShiftHasOpenSlots(s, Model.Requirements));
+                        // hasOpenSlots = shiftsThisDay.Any(s => Model.ShiftHasOpenSlots(s, Model.Requirements));
+                        var hasShifts = shiftsThisDay.Any();
                         <td class="text-center align-middle">
-                            @if (hasOpenSlots)
+                            @if (hasShifts)
                             {
-                                @foreach (var shift in shiftsThisDay.Where(s => Model.ShiftHasOpenSlots(s, Model.Requirements)))
+                                @foreach (var shift in shiftsThisDay)
                                 {
-                                    <a asp-action="ShiftDetail" asp-route-id="@shift.Id" asp-route-week="@Model.CurrentWeek"
+                                    <a href="#"
+                                       onclick="openShiftDetail(@shift.Id, '@Model.CurrentWeek')"
                                        class="badge bg-warning text-dark mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
-                                       aria-label="Open slot: @shift.Venue?.Name @shift.ShiftDefinition?.Name">
+                                       aria-label="Open shift: @shift.Venue?.Name @shift.ShiftDefinition?.Name @shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime">
+
                                         <div class="small">@shift.Venue?.Name</div>
                                         <div class="small">@shift.ShiftDefinition?.Name</div>
-                                        <div class="small">@shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime</div>
+                                        <div class="small">
+                                            @shift.ShiftDefinition?.StartTime -
+                                            @shift.ShiftDefinition?.EndTime
+                                        </div>
+
                                     </a>
                                 }
                             }
@@ -164,16 +170,19 @@
                                     </div> *@
 
                                     @* In "My shifts" row — replace the div with: *@
-                                    <a asp-action="ShiftDetail"
-                                    asp-route-id="@a.ScheduledShiftId"
-                                    asp-route-week="@Model.CurrentWeek"
-                                    class="badge bg-secondary mb-1 d-block text-decoration-none"
-                                    role="gridcell"
-                                    tabindex="0"
-                                    aria-label="@a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name">
+                                    <a href="#"
+                                       onclick="openShiftDetail(@a.ScheduledShiftId, '@Model.CurrentWeek')"
+                                       class="badge bg-secondary mb-1 d-block text-decoration-none"
+                                       role="gridcell"
+                                       tabindex="0"
+                                       aria-label="Assigned shift: @a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
                                         <div class="small">@a.ScheduledShift?.Venue?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
-                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
+                                        <div class="small">
+                                            @a.ScheduledShift?.ShiftDefinition?.StartTime -
+                                            @a.ScheduledShift?.ShiftDefinition?.EndTime
+                                        </div>
+
                                     </a>
                                 }
                                 @if (!theirShifts.Any())
@@ -189,3 +198,47 @@
         </table>
     </div>
 </div>
+<!-- Shift Detail Modal -->
+<div class="modal fade" id="shiftDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="shiftDetailModalContent">
+            <!-- Partial gets loaded here -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+
+        function openShiftDetail(id, week) {
+
+            fetch(`/Schedule/ShiftDetail?id=${id}&week=${week}`)
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("Failed to load shift details");
+                    }
+
+                    return response.text();
+                })
+                .then(html => {
+
+                    document.getElementById(
+                        "shiftDetailModalContent"
+                    ).innerHTML = html;
+
+
+                    const modal = new bootstrap.Modal(
+                        document.getElementById("shiftDetailModal")
+                    );
+
+                    modal.show();
+
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+    </script>
+}

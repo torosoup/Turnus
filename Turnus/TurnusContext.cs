@@ -41,5 +41,11 @@ public class TurnusContext(DbContextOptions<TurnusContext> options) : IdentityDb
             .WithMany(d => d.Roles)
             .HasForeignKey(r => r.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Unique constraint to prevent duplicate assignments: ScheduledShiftId + EmployeeId + RoleId
+        modelBuilder.Entity<ShiftAssignment>()
+            .HasIndex(a => new { a.ScheduledShiftId, a.EmployeeId, a.RoleId })
+            .IsUnique();
     }
+
+
 }

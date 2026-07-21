@@ -1,0 +1,92 @@
+﻿@model Turnus.Models.ScheduleReviewViewModel
+
+@{
+    var shift = Model.Shift;
+    var venue = Model.Venue;
+    var date = Model.Date;
+    var availability = Model.Availability;
+    var requirementsForShift = Model.Requirements
+        .Where(r => r.DepartmentId == shift.DepartmentId)
+        .ToList();
+}
+
+<div class="border rounded p-3 mb-3">
+
+    <strong>
+        @Model.Shift.Department?.Name
+        —
+        @Model.Shift.ShiftDefinition?.Name
+    </strong>
+
+    <div class="text-muted small">
+        @Model.Shift.ShiftDefinition?.StartTime -
+        @Model.Shift.ShiftDefinition?.EndTime
+    </div>
+
+
+    @foreach (var req in requirementsForShift)
+    {
+        var assigned = Model.Shift.ShiftAssignments
+            .Where(a => a.RoleId == req.RoleId)
+            .ToList();
+
+        var availableForShift = Model.Availability
+            .Where(a => a.ScheduledShiftId == Model.Shift.Id)
+            .ToList();
+
+        <div class="mb-3">
+
+            <div class="d-flex justify-content-between">
+                <strong>@req.Role?.Name</strong>
+
+                <span class="text-muted small">
+                    Need @req.RequiredCount |
+                    Assigned @assigned.Count
+                </span>
+            </div>
+
+            <partial name="_AssignedEmployees.cshtml"
+                     model="assigned" />
+
+            <partial name="_AvailableEmployees.cshtml"
+                 model="new Turnus.Models.AvailableEmployeesViewModel
+                 {
+                     Shift = Model.Shift,
+                     Requirement = req,
+                     Available = availableForShift,
+                     Assigned = assigned,
+                     Venue = Model.Venue,
+                     Date = Model.Date
+                 }" />
+
+            @{
+                var isFull = assigned.Count >= req.RequiredCount;
+            }
+
+            @if (isFull)
+            {
+                <button class="btn btn-sm btn-secondary" disabled>
+                    Assign
+                </button>
+
+                <div class="text-danger small mt-1">This role is already fully staffed.</div>
+            }
+            else
+            {
+                <button class="btn btn-sm btn-primary"
+                        onclick="DashboardShiftAssignment.openAssignModal(
+                    @Model.Shift.Id,
+                    @req.RoleId,
+                    @venue!.Id,
+                    '@date.ToString("yyyy-MM-dd")')">
+                    Assign
+                </button>
+
+                <small class="text-muted">
+                    Assigned manually from registered employees.
+                </small>
+            }
+
+</div>
+    }
+</div>

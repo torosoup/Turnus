@@ -1,0 +1,216 @@
+@using Turnus.Models
+@model Turnus.Models.ScheduledShift
+
+@{
+    var requirements = ViewBag.Requirements as List<VenueStaffingRequirement>;
+    var myAvailability = ViewBag.MyAvailability as Availability;
+    var returnWeek = ViewBag.ReturnWeek as string;
+}
+
+<div class="modal-header">
+    <h5 class="modal-title">
+        Shift Details
+    </h5>
+
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="modal">
+    </button>
+</div>
+
+
+<div class="modal-body">
+
+    <dl class="row mb-3">
+
+        <dt class="col-sm-4">Venue</dt>
+        <dd class="col-sm-8">
+            @Model.Venue?.Name
+        </dd>
+
+
+        <dt class="col-sm-4">Date</dt>
+        <dd class="col-sm-8">
+            @Model.Date.ToLongDateString()
+        </dd>
+
+
+        <dt class="col-sm-4">Shift</dt>
+        <dd class="col-sm-8">
+            @Model.ShiftDefinition?.Name
+        </dd>
+
+
+        <dt class="col-sm-4">Time</dt>
+        <dd class="col-sm-8">
+            @Model.ShiftDefinition?.StartTime -
+            @Model.ShiftDefinition?.EndTime
+        </dd>
+
+    </dl>
+
+
+    <hr />
+
+    <h6>Staffing</h6>
+
+    @if (requirements == null || !requirements.Any())
+    {
+        <p class="text-muted small">
+            No staffing requirements defined.
+        </p>
+    }
+    else
+    {
+        <table class="table table-sm">
+
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Required</th>
+                    <th>Assigned</th>
+                </tr>
+            </thead>
+
+
+            <tbody>
+
+                @foreach (var req in requirements)
+                {
+                    var assigned = Model.ShiftAssignments
+                        .Where(a => a.RoleId == req.RoleId)
+                        .ToList();
+
+                    <tr>
+
+                        <td>
+                            @req.Role?.Name
+                        </td>
+
+                        <td>
+                            @req.RequiredCount
+                        </td>
+
+                        <td>
+
+                            @if (!assigned.Any())
+                            {
+                                <span class="text-muted">
+                                    None
+                                </span>
+                            }
+                            else
+                            {
+                                @string.Join(", ",
+                                    assigned.Select(a =>
+                                        string.IsNullOrEmpty(a.Employee?.FullName)
+                                        ? a.Employee?.Email
+                                        : a.Employee?.FullName))
+                            }
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+    }
+
+
+    <hr />
+
+
+    <h6>Your availability</h6>
+
+
+    @if (myAvailability == null)
+    {
+        <p class="text-muted small">
+            You haven't responded yet.
+        </p>
+    }
+    else if (myAvailability.IsAvailable)
+    {
+        <p class="text-success small">
+            ✓ Available
+        </p>
+    }
+    else
+    {
+        <p class="text-danger small">
+            ✗ Unavailable
+        </p>
+    }
+
+
+    <div class="d-flex gap-2">
+
+
+        <form asp-controller="Schedule"
+              asp-action="SetAvailability"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="scheduledShiftId"
+                   value="@Model.Id" />
+
+            <input type="hidden"
+                   name="isAvailable"
+                   value="true" />
+
+            <input type="hidden"
+                   name="week"
+                   value="@returnWeek" />
+
+
+            <button class="btn btn-sm
+                @(myAvailability?.IsAvailable == true
+                        ? "btn-success"
+                        : "btn-outline-success")">
+
+                ✓ Available
+
+            </button>
+
+        </form>
+
+
+
+        <form asp-controller="Schedule"
+              asp-action="SetAvailability"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="scheduledShiftId"
+                   value="@Model.Id" />
+
+            <input type="hidden"
+                   name="isAvailable"
+                   value="false" />
+
+            <input type="hidden"
+                   name="week"
+                   value="@returnWeek" />
+
+
+            <button class="btn btn-sm
+                @(myAvailability?.IsAvailable == false
+                        ? "btn-danger"
+                        : "btn-outline-danger")">
+
+                ✗ Unavailable
+
+            </button>
+
+        </form>
+
+
+    </div>
+
+</div>

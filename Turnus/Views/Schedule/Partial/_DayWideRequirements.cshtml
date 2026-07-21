@@ -1,0 +1,76 @@
+﻿@model Turnus.Models.ScheduleReviewDayWideViewModel
+
+@{
+    var venue = ViewBag.Venue as Turnus.Models.Venue;
+    var date = (DateTime)ViewBag.Date;
+}
+
+@foreach (var req in Model.Requirements)
+{
+    var assignedForRole = Model.Shifts
+        .SelectMany(s => s.ShiftAssignments
+            .Where(a => a.RoleId == req.RoleId))
+        .ToList();
+
+    <div class="border rounded p-3 mb-3">
+
+        <div class="d-flex justify-content-between">
+            <strong>@req.Role?.Name</strong>
+
+            <span class="text-muted small">
+                Need @req.RequiredCount |
+                Assigned @assignedForRole.Count
+            </span>
+        </div>
+
+        @if (assignedForRole.Any())
+        {
+            <ul class="mt-2 mb-2">
+
+                @foreach (var assignment in assignedForRole)
+                {
+                    <li class="d-flex align-items-center gap-2">
+
+                        <span>@assignment.Employee?.Email</span>
+
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="DashboardShiftAssignment.openUnassignModal(
+                            @assignment.Id,
+                            @venue!.Id,
+                            '@date.ToString("yyyy-MM-dd")')">
+                            Remove
+                        </button>
+
+                    </li>
+                }
+
+            </ul>
+        }
+
+        @{
+            var isFull = assignedForRole.Count >= req.RequiredCount;
+        }
+
+        @if (isFull)
+        {
+            <button class="btn btn-sm btn-secondary" disabled>Assign</button>
+            <div class="text-danger small mt-1">This role is already fully staffed.</div>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-primary"
+                    onclick="DashboardShiftAssignment.openAssignModal(
+                @Model.Shifts.First().Id,
+                @req.RoleId,
+                @venue!.Id,
+                '@date.ToString("yyyy-MM-dd")')">
+                Assign
+            </button>
+
+            <small class="text-muted">
+                Assigned manually from registered employees.
+            </small>
+        }
+
+    </div>
+}

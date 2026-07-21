@@ -1,0 +1,60 @@
+﻿@model IEnumerable<Turnus.Models.ScheduledShift>
+
+@{
+    var requirements = ViewBag.Requirements as List<Turnus.Models.VenueStaffingRequirement> ?? new();
+    var availability = ViewBag.Availability as List<Turnus.Models.Availability> ?? new();
+
+    var venue = ViewBag.Venue as Turnus.Models.Venue;
+    var date = (DateTime)ViewBag.Date;
+
+    var dayScoped = requirements.Where(r => !r.IsShiftScoped).ToList();
+    var shiftScoped = requirements.Where(r => r.IsShiftScoped).ToList();
+}
+
+<div id="schedule-review-modal">
+
+    <h5 class="modal-title mb-2">
+        Review Staffing
+    </h5>
+
+    <div class="text-muted mb-3">
+        @venue?.Name — @date.ToShortDateString()
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">
+            No shifts scheduled.
+        </p>
+    }
+    else
+    {
+        @await Html.PartialAsync(
+            "~/Views/Schedule/Partial/_DayWideRequirements.cshtml",
+            new Turnus.Models.ScheduleReviewDayWideViewModel
+            {
+                Shifts = Model.ToList(),
+                Requirements = dayScoped,
+                Venue = venue!,
+                Date = date
+            })
+
+        <h6 class="mt-4">Shift roles</h6>
+
+        @foreach (var shift in Model)
+        {
+            @await Html.PartialAsync(
+                "~/Views/Schedule/Partial/_ShiftReviewCard.cshtml",
+                new Turnus.Models.ScheduleReviewViewModel
+                {
+                    Shift = shift,
+                    Requirements = shiftScoped,
+                    Availability = availability,
+                    Venue = venue!,
+                    Date = date
+                })
+        }
+    }
+
+</div>
+

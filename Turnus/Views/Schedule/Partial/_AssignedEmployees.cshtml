@@ -1,0 +1,28 @@
+﻿@model List<Turnus.Models.ShiftAssignment>
+
+@{
+    var venue = ViewBag.Venue as Turnus.Models.Venue;
+    var date = (DateTime)ViewBag.Date;
+}
+
+@if (Model.Any())
+{
+    <ul class="mt-2">
+        @foreach (var assignment in Model)
+        {
+            <li class="d-flex align-items-center gap-2">
+
+                <span>@assignment.Employee?.Email</span>
+
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="DashboardShiftAssignment.openUnassignModal(
+                    @assignment.Id,
+                    @venue!.Id,
+                    '@date.ToString("yyyy-MM-dd")')">
+                    Remove
+                </button>
+
+            </li>
+        }
+    </ul>
+}

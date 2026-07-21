@@ -5,7 +5,7 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Manager")]
     public class ScheduleReviewController : Controller
     {
         private readonly TurnusContext _context;
@@ -59,51 +59,73 @@ namespace Turnus.Controllers
             ViewBag.Availability = availability;
             ViewBag.AllEmployees = allEmployees;
 
-            return View(shifts);
+            return PartialView(
+                "~/Views/Schedule/Partial/_ScheduleReview.cshtml",
+                shifts);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AssignShift(int scheduledShiftId, string employeeId, int roleId)
+        /*
+        private async Task<IActionResult> LoadReviewPartial(
+            int venueId,
+            DateTime date)
         {
-            var alreadyAssigned = await _context.ShiftAssignment
-                .AnyAsync(a => a.ScheduledShiftId == scheduledShiftId
-                            && a.EmployeeId == employeeId
-                            && a.RoleId == roleId);
+            var venue = await _context.Venue.FindAsync(venueId);
 
-            if (!alreadyAssigned)
-            {
-                _context.ShiftAssignment.Add(new ShiftAssignment
-                {
-                    ScheduledShiftId = scheduledShiftId,
-                    EmployeeId = employeeId,
-                    RoleId = roleId
-                });
-                await _context.SaveChangesAsync();
-            }
+            var shifts = await _context.ScheduledShift
+                .Include(s => s.Department)
+                .Include(s => s.ShiftDefinition)
+                .Include(s => s.ShiftAssignments)
+                    .ThenInclude(a => a.Employee)
+                .Include(s => s.ShiftAssignments)
+                    .ThenInclude(a => a.Role)
+                .Where(s =>
+                    s.VenueId == venueId &&
+                    s.Date >= date.Date &&
+                    s.Date < date.Date.AddDays(1))
+                .ToListAsync();
 
-            var shift = await _context.ScheduledShift.FindAsync(scheduledShiftId);
-            return RedirectToAction(nameof(Review), new
-            {
-                venueId = shift!.VenueId,
-                date = shift.Date.ToString("yyyy-MM-dd")
-            });
-        }
 
-        [HttpPost]
-        public async Task<IActionResult> UnassignShift(int shiftAssignmentId, int venueId, DateTime date)
-        {
-            var assignment = await _context.ShiftAssignment.FindAsync(shiftAssignmentId);
-            if (assignment != null)
-            {
-                _context.ShiftAssignment.Remove(assignment);
-                await _context.SaveChangesAsync();
-            }
+            var shiftIds = shifts
+                .Select(s => s.Id)
+                .ToList();
 
-            return RedirectToAction(nameof(Review), new
-            {
-                venueId,
-                date = date.ToString("yyyy-MM-dd")
-            });
-        }
+
+            var departmentIds = shifts
+                .Where(s => s.DepartmentId.HasValue)
+                .Select(s => s.DepartmentId!.Value)
+                .Distinct()
+                .ToList();
+
+
+            var requirements = await _context.VenueStaffingRequirement
+                .Include(r => r.Role)
+                .Where(r => departmentIds.Contains(r.DepartmentId))
+                .ToListAsync();
+
+
+            var availability = await _context.Availability
+                .Where(a =>
+                    shiftIds.Contains(a.ScheduledShiftId) &&
+                    a.IsAvailable)
+                .Include(a => a.Employee)
+                .ToListAsync();
+
+
+            var allEmployees = await _context.Users
+                .Cast<ApplicationUser>()
+                .ToListAsync();
+
+
+            ViewBag.Venue = venue;
+            ViewBag.Date = date;
+            ViewBag.Requirements = requirements;
+            ViewBag.Availability = availability;
+            ViewBag.AllEmployees = allEmployees;
+
+
+            return PartialView(
+                "~/Views/Schedule/Partial/_ScheduleReview.cshtml",
+                shifts);
+        } */
     }
 }

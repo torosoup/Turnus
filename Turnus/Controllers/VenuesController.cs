@@ -37,7 +37,7 @@ namespace Turnus.Controllers
 
         public IActionResult Create()
         {
-            return PartialView("~/Views/Admin/Partials/Venue/_CreateVenue.cshtml");
+            return PartialView("~/Views/Admin/Partials/Configuration/Venue/_CreateVenue.cshtml");
         }
 
         [HttpPost]
@@ -61,7 +61,7 @@ namespace Turnus.Controllers
             var venue = await _context.Venue.FindAsync(id);
             if (venue == null) return NotFound();
 
-            return PartialView("~/Views/Admin/Partials/Venue/_EditVenue.cshtml", venue);
+            return PartialView("~/Views/Admin/Partials/Configuration/Venue/_EditVenue.cshtml", venue);
         }
 
         [HttpPost]
@@ -82,9 +82,9 @@ namespace Turnus.Controllers
                     if (!_context.Venue.Any(e => e.Id == id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "Admin");
             }
-            return PartialView("~/Views/Admin/Partials/Venue/_EditVenue.cshtml", venue);
+            return PartialView("~/Views/Admin/Partials/Configuration/Venue/_EditVenue.cshtml", venue);
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -97,7 +97,7 @@ namespace Turnus.Controllers
 
             if (venue == null) return NotFound();
 
-            return PartialView("~/Views/Admin/Partials/Venue/_DeleteVenue.cshtml", venue);
+            return PartialView("~/Views/Admin/Partials/Configuration/Venue/_DeleteVenue.cshtml", venue);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -107,7 +107,7 @@ namespace Turnus.Controllers
             var venue = await _context.Venue.FindAsync(id);
             if (venue != null) _context.Venue.Remove(venue);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Dashboard", "Admin");
         }
     }
 }

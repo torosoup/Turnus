@@ -13,10 +13,13 @@ namespace Turnus.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Create(int departmentId)
+        public async Task<IActionResult> Create()
         {
-            return PartialView("~/Views/Admin/Partials/ShiftDefinition/_CreateShiftDefinition.cshtml",
-                new ShiftDefinition { DepartmentId = departmentId });
+            ViewBag.Departments = await _context.Department.ToListAsync();
+
+            return PartialView(
+                "~/Views/Admin/Partials/Configuration/ShiftDefinition/_CreateShiftDefinition.cshtml",
+                new ShiftDefinition());
         }
 
         [HttpPost]
@@ -24,8 +27,10 @@ namespace Turnus.Controllers
         {
             if (!ModelState.IsValid)
             {
+                ViewBag.Departments = await _context.Department.ToListAsync();
+
                 return PartialView(
-                    "~/Views/Admin/Partials/ShiftDefinition/_CreateShiftDefinition.cshtml",
+                    "~/Views/Admin/Partials/Configuration/ShiftDefinition/_CreateShiftDefinition.cshtml",
                     model);
             }
 
@@ -38,14 +43,30 @@ namespace Turnus.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var sd = await _context.ShiftDefinition.FindAsync(id);
-            return PartialView("~/Views/Admin/Partials/ShiftDefinition/_EditShiftDefinition.cshtml", sd);
+
+            if (sd == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Departments = await _context.Department.ToListAsync();
+
+            return PartialView(
+                "~/Views/Admin/Partials/Configuration/ShiftDefinition/_EditShiftDefinition.cshtml",
+                sd);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(ShiftDefinition model)
         {
             if (!ModelState.IsValid)
-                return PartialView("~/Views/Admin/Partials/ShiftDefinition/_EditShiftDefinition.cshtml", model);
+            {
+                ViewBag.Departments = await _context.Department.ToListAsync();
+
+                return PartialView(
+                    "~/Views/Admin/Partials/Configuration/ShiftDefinition/_EditShiftDefinition.cshtml",
+                    model);
+            }
 
             _context.Update(model);
             await _context.SaveChangesAsync();
@@ -55,15 +76,34 @@ namespace Turnus.Controllers
 
         public async Task<IActionResult> Delete(int id)
         {
+
             var sd = await _context.ShiftDefinition.FindAsync(id);
-            return PartialView("~/Views/Admin/Partials/ShiftDefinition/_DeleteShiftDefinition.cshtml", sd);
+
+            if (sd == null)
+            {
+                return NotFound();
+            }
+
+            return PartialView("~/Views/Admin/Partials/Configuration/ShiftDefinition/_DeleteShiftDefinition.cshtml", sd);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Delete(ShiftDefinition model)
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var sd = await _context.ShiftDefinition.FindAsync(model.Id);
+            var sd = await _context.ShiftDefinition
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (sd == null)
+                return NotFound();
+
+            var scheduledShifts = await _context.ScheduledShift
+                .Where(x => x.ShiftDefinitionId == id)
+                .ToListAsync();
+
+            _context.ScheduledShift.RemoveRange(scheduledShifts);
             _context.ShiftDefinition.Remove(sd);
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Dashboard", "Admin");

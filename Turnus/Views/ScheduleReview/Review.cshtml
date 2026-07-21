@@ -102,6 +102,8 @@ else
                         .Where(a => a.RoleId == req.RoleId)
                         .ToList();
 
+                    var isFull = assignedForThisShiftRole.Count >= req.RequiredCount;
+
                     <div class="mb-3">
                         <strong>@req.Role?.Name</strong>
                         <span class="text-muted small ms-2">

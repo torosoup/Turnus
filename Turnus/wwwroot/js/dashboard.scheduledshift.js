@@ -1,7 +1,7 @@
 ﻿window.DashboardScheduledShift = (function () {
 
-    async function openCreateModal(venueId, date) {
-        const response = await fetch(`/ScheduledShifts/Create?venueId=${venueId}&date=${date}`, {
+    async function openCreateModal(venueId, departmentId, date,) {
+        const response = await fetch(`/ScheduledShifts/Create?venueId=${venueId}&departmentId=${departmentId}&date=${date}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         Modal.open(await response.text());
