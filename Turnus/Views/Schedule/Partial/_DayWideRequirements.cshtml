@@ -47,18 +47,30 @@
             </ul>
         }
 
-        <button class="btn btn-sm btn-primary"
-                onclick="DashboardShiftAssignment.openAssignModal(
-            @Model.Shifts.First().Id,
-            @req.RoleId,
-            @venue!.Id,
-            '@date.ToString("yyyy-MM-dd")')">
-            Assign
-        </button>
+        @{
+            var isFull = assignedForRole.Count >= req.RequiredCount;
+        }
 
-        <small class="text-muted">
-            Assigned manually from registered employees.
-        </small>
+        @if (isFull)
+        {
+            <button class="btn btn-sm btn-secondary" disabled>Assign</button>
+            <div class="text-danger small mt-1">This role is already fully staffed.</div>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-primary"
+                    onclick="DashboardShiftAssignment.openAssignModal(
+                @Model.Shifts.First().Id,
+                @req.RoleId,
+                @venue!.Id,
+                '@date.ToString("yyyy-MM-dd")')">
+                Assign
+            </button>
+
+            <small class="text-muted">
+                Assigned manually from registered employees.
+            </small>
+        }
 
     </div>
 }

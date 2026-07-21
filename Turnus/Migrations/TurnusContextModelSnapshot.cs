@@ -367,6 +367,9 @@ namespace Turnus.Migrations
 
                     b.HasIndex("ScheduledShiftId");
 
+                    b.HasIndex("ScheduledShiftId", "EmployeeId", "RoleId")
+                        .IsUnique();
+
                     b.ToTable("ShiftAssignment");
                 });
 
