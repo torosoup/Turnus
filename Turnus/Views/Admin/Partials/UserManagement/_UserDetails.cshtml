@@ -1,0 +1,46 @@
+@model Turnus.Models.ApplicationUser
+
+<h5 class="modal-title mb-3">User Profile</h5>
+
+<div class="mb-3">
+    <label class="form-label">Name</label>
+    <div>@Model.FullName</div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Email</label>
+    <div>@Model.Email</div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Assigned Roles</label>
+    <div>
+        @foreach (var r in (List<string>)ViewBag.Roles)
+        {
+            <span class="badge bg-secondary me-1">@r</span>
+        }
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Shift History</label>
+    <div>
+        @{
+            var assignments = (List<Turnus.Models.ShiftAssignment>)ViewBag.Assignments;
+        }
+
+        @if (assignments == null || !assignments.Any())
+        {
+            <div class="text-muted">No assignments found</div>
+        }
+        else
+        {
+            <ul class="list-unstyled">
+                @foreach (var a in assignments)
+                {
+                    <li>@a.ScheduledShift?.Date.ToString("yyyy-MM-dd") - @a.ScheduledShift?.ShiftDefinition?.Name (@a.Role?.Name)</li>
+                }
+            </ul>
+        }
+    </div>
+</div>

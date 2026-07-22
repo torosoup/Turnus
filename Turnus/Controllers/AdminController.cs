@@ -80,6 +80,16 @@ namespace Turnus.Controllers
             return PartialView("Partials/Configuration/_StaffingRequirementsSection", model);
         }
 
+        public async Task<IActionResult> UsersSection(int? venueId, int? departmentId)
+        {
+            // Return list of users for the admin dashboard user management section
+            var users = await _context.Users
+                .Cast<ApplicationUser>()
+                .ToListAsync();
+
+            return PartialView("Partials/UserManagement/_UsersSection", users);
+        }
+
         public async Task<IActionResult> ScheduleSection(int venueId, int? departmentId)
         {
             var model = await BuildDashboardModel(venueId, departmentId);

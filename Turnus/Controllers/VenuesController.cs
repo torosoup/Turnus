@@ -82,7 +82,8 @@ namespace Turnus.Controllers
                     if (!_context.Venue.Any(e => e.Id == id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction("Dashboard", "Admin");
+                // Preserve venue context after editing
+                return RedirectToAction("Dashboard", "Admin", new { venueId = venue.Id });
             }
             return PartialView("~/Views/Admin/Partials/Configuration/Venue/_EditVenue.cshtml", venue);
         }
@@ -107,6 +108,7 @@ namespace Turnus.Controllers
             var venue = await _context.Venue.FindAsync(id);
             if (venue != null) _context.Venue.Remove(venue);
             await _context.SaveChangesAsync();
+            // After deleting a venue, the venue no longer exists; redirect to dashboard without venue context
             return RedirectToAction("Dashboard", "Admin");
         }
     }

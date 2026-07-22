@@ -124,11 +124,13 @@
 
     <script src="~/js/dashboard.schedulereview.js"></script>
     <script src="~/js/dashboard.shiftassignment.js"></script>
+    <script src="~/js/dashboard.usermanagement.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
         const venueId = @Model.SelectedVenue?.Id ?? 0;
-        Dashboard.loadSections(venueId);
+        const departmentId = @Model.SelectedDepartment?.Id ?? 0;
+        Dashboard.loadSections(venueId, departmentId);
         });
     </script>
 

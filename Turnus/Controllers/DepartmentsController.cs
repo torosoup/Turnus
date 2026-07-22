@@ -53,7 +53,7 @@ namespace Turnus.Controllers
             {
                 _context.Add(department);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Dashboard", "Admin");
+                return RedirectToAction("Dashboard", "Admin", new { venueId = department.VenueId, departmentId = department.Id });
             }
             ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
             return PartialView("~/Views/Admin/Partials/Configuration/Department/_CreateDepartment.cshtml", department);
@@ -114,7 +114,8 @@ namespace Turnus.Controllers
             var department = await _context.Department.FindAsync(id);
             if (department != null) _context.Department.Remove(department);
             await _context.SaveChangesAsync();
-            return RedirectToAction("Dashboard", "Admin");
+            // After deletion, preserve venue context but department no longer exists
+            return RedirectToAction("Dashboard", "Admin", new { venueId = department?.VenueId });
         }
     }
 }

@@ -190,22 +190,40 @@ namespace Turnus.Controllers
 
             public bool ShiftHasOpenSlots(ScheduledShift shift, List<VenueStaffingRequirement> requirements)
             {
-                var shiftRequirements = requirements
-                    .Where(r => r.IsShiftScoped)
+                // Consider both shift-scoped and day-scoped requirements.
+                // Shift is considered to have open slots if any requirement (shift- or day-scoped)
+                // has fewer assigned employees than RequiredCount.
+
+                // If there are no requirements for this department, return false (no open slots to satisfy)
+                var relatedRequirements = requirements
+                    .Where(r => r.DepartmentId == shift.DepartmentId)
                     .ToList();
 
-                if (!shiftRequirements.Any())
-                {
+                if (!relatedRequirements.Any())
                     return false;
-                }
 
-                foreach (var req in shiftRequirements)
+                foreach (var req in relatedRequirements)
                 {
-                    var assigned = shift.ShiftAssignments
-                        .Count(a => a.RoleId == req.RoleId);
+                    if (req.IsShiftScoped)
+                    {
+                        // Count assignments for this specific scheduled shift
+                        var assigned = shift.ShiftAssignments.Count(a => a.RoleId == req.RoleId);
+                        if (assigned < req.RequiredCount)
+                            return true;
+                    }
+                    else
+                    {
+                        // Day-scoped: aggregate assignments across all scheduled shifts for the same day/department/venue
+                        var assignedDay = ScheduledShifts
+                            .Where(s => s.Date.Date == shift.Date.Date
+                                        && s.DepartmentId == shift.DepartmentId
+                                        && s.VenueId == shift.VenueId)
+                            .SelectMany(s => s.ShiftAssignments)
+                            .Count(a => a.RoleId == req.RoleId);
 
-                    if (assigned < req.RequiredCount)
-                        return true;
+                        if (assignedDay < req.RequiredCount)
+                            return true;
+                    }
                 }
 
                 return false;

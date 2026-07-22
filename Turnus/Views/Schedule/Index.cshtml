@@ -115,12 +115,12 @@
                     @foreach (var day in Model.WeekDays)
                     {
                         var shiftsThisDay = Model.ShiftsForDay(day);
-                        // hasOpenSlots = shiftsThisDay.Any(s => Model.ShiftHasOpenSlots(s, Model.Requirements));
-                        var hasShifts = shiftsThisDay.Any();
+                        var openShifts = shiftsThisDay.Where(s => Model.ShiftHasOpenSlots(s, Model.Requirements)).ToList();
+                        var hasOpen = openShifts.Any();
                         <td class="text-center align-middle">
-                            @if (hasShifts)
+                            @if (hasOpen)
                             {
-                                @foreach (var shift in shiftsThisDay)
+                                @foreach (var shift in openShifts)
                                 {
                                     <a href="#"
                                        onclick="openShiftDetail(@shift.Id, '@Model.CurrentWeek')"
