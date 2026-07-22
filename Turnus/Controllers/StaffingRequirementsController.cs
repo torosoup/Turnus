@@ -48,7 +48,8 @@ namespace Turnus.Controllers
             _context.VenueStaffingRequirement.Add(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", "Admin");
+            var dept = await _context.Department.FindAsync(model.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = model.DepartmentId });
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -87,7 +88,8 @@ public async Task<IActionResult> Edit(VenueStaffingRequirement model)
     _context.Update(model);
     await _context.SaveChangesAsync();
 
-    return RedirectToAction("Dashboard", "Admin");
+    var dept = await _context.Department.FindAsync(model.DepartmentId);
+    return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = model.DepartmentId });
 }
 
         public async Task<IActionResult> Delete(int id)
@@ -103,10 +105,11 @@ public async Task<IActionResult> Edit(VenueStaffingRequirement model)
         public async Task<IActionResult> Delete(VenueStaffingRequirement model)
         {
             var req = await _context.VenueStaffingRequirement.FindAsync(model.Id);
-            _context.VenueStaffingRequirement.Remove(req);
-            await _context.SaveChangesAsync();
+    _context.VenueStaffingRequirement.Remove(req);
+    await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", "Admin");
+    var dept = await _context.Department.FindAsync(req.DepartmentId);
+    return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = req.DepartmentId });
         }
     }
 }

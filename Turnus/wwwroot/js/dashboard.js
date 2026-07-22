@@ -18,6 +18,10 @@
         $("#roles-section").load(`/Admin/RolesSection?venueId=${venueId}&departmentId=${departmentId}`);
         $("#shift-definitions-section").load(`/Admin/ShiftDefinitionsSection?venueId=${venueId}&departmentId=${departmentId}`);
         $("#staffing-requirements-section").load(`/Admin/StaffingRequirementsSection?venueId=${venueId}&departmentId=${departmentId}`);
+        $("#user-management-section").load(`/Admin/UsersSection?venueId=${venueId}&departmentId=${departmentId}`, function () {
+            // show the section once loaded
+            document.getElementById('user-management-section').style.display = '';
+        });
         $("#schedule-section").load(`/Admin/ScheduleSection?venueId=${venueId}&departmentId=${departmentId}`);
     }
 };

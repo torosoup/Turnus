@@ -59,7 +59,9 @@ public class RolesController : Controller
             _context.Add(role);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", "Admin");
+            // Preserve dashboard context: role -> department -> venue
+            var dept = await _context.Department.FindAsync(role.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = role.DepartmentId });
         }
 
         ViewBag.Venues = await _context.Venue.ToListAsync();
@@ -163,7 +165,10 @@ public class RolesController : Controller
         }
 
         await _context.SaveChangesAsync();
-        return RedirectToAction("Dashboard", "Admin");
+
+        // Redirect back to the dashboard with context for the deleted role
+        var deptForDeleted = await _context.Department.FindAsync(role?.DepartmentId);
+        return RedirectToAction("Dashboard", "Admin", new { venueId = deptForDeleted?.VenueId, departmentId = role?.DepartmentId });
     }
 
     private bool RoleExists(int? id)

@@ -65,6 +65,7 @@ namespace Turnus.Controllers
             {
                 // Derive scheduled shift information from the server-side record
                 var scheduledShift = await _context.ScheduledShift
+                    .Include(s => s.ShiftDefinition)
                     .FirstOrDefaultAsync(s => s.Id == model.ScheduledShiftId);
 
                 if (scheduledShift == null)
@@ -77,6 +78,54 @@ namespace Turnus.Controllers
                     .FirstOrDefaultAsync(r =>
                         r.RoleId == model.RoleId &&
                         r.DepartmentId == scheduledShift.DepartmentId);
+
+                // Prevent an employee being assigned more than one role for the same scheduled shift
+                if (!string.IsNullOrEmpty(model.EmployeeId))
+                {
+                    var alreadyForThisShift = await _context.ShiftAssignment
+                        .AnyAsync(a => a.ScheduledShiftId == model.ScheduledShiftId && a.EmployeeId == model.EmployeeId);
+
+                    if (alreadyForThisShift)
+                    {
+                        ModelState.AddModelError("", "This employee is already assigned to a role for this shift.");
+                        return await ReturnScheduleReview(venueId, date);
+                    }
+
+                    // Prevent an employee being assigned to another shift that overlaps in time
+                    // Load existing assignments for this employee (exclude current scheduled shift)
+                    var existingAssignments = await _context.ShiftAssignment
+                        .Include(a => a.ScheduledShift).ThenInclude(s => s.ShiftDefinition)
+                        .Where(a => a.EmployeeId == model.EmployeeId && a.ScheduledShiftId != model.ScheduledShiftId)
+                        .ToListAsync();
+
+                    if (scheduledShift?.ShiftDefinition != null)
+                    {
+                        var currentStart = scheduledShift.Date.Date + scheduledShift.ShiftDefinition.StartTime;
+                        var currentEnd = scheduledShift.Date.Date + scheduledShift.ShiftDefinition.EndTime;
+
+                        // Handle overnight shifts where EndTime is less than or equal to StartTime
+                        if (scheduledShift.ShiftDefinition.EndTime <= scheduledShift.ShiftDefinition.StartTime)
+                            currentEnd = currentEnd.AddDays(1);
+
+                        foreach (var a in existingAssignments)
+                        {
+                            var s = a.ScheduledShift;
+                            if (s?.ShiftDefinition == null) continue;
+
+                            var otherStart = s.Date.Date + s.ShiftDefinition.StartTime;
+                            var otherEnd = s.Date.Date + s.ShiftDefinition.EndTime;
+                            if (s.ShiftDefinition.EndTime <= s.ShiftDefinition.StartTime)
+                                otherEnd = otherEnd.AddDays(1);
+
+                            // Overlap if start < otherEnd && otherStart < end
+                            if (currentStart < otherEnd && otherStart < currentEnd)
+                            {
+                                ModelState.AddModelError("", "This employee is already assigned to another shift that overlaps this one.");
+                                return await ReturnScheduleReview(venueId, date);
+                            }
+                        }
+                    }
+                }
 
                 if (requirement != null)
                 {
@@ -108,7 +157,7 @@ namespace Turnus.Controllers
                     if (assignedCount >= requirement.RequiredCount)
                     {
                         ModelState.AddModelError("", "This role is already fully staffed.");
-                        return BadRequest(ModelState);
+                        return await ReturnScheduleReview(venueId, date);
                     }
                 }
 

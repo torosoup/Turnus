@@ -37,7 +37,9 @@ namespace Turnus.Controllers
             _context.ShiftDefinition.Add(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", "Admin");
+            // Preserve dashboard context: department + venue if available
+            var dept = await _context.Department.FindAsync(model.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = model.DepartmentId });
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -71,7 +73,8 @@ namespace Turnus.Controllers
             _context.Update(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", "Admin");
+            var dept = await _context.Department.FindAsync(model.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = model.DepartmentId });
         }
 
         public async Task<IActionResult> Delete(int id)
@@ -106,7 +109,8 @@ namespace Turnus.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", "Admin");
+            var dept = await _context.Department.FindAsync(sd.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = sd.DepartmentId });
         }
     }
 }
