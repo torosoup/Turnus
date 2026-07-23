@@ -13,7 +13,7 @@
         <div class="d-flex align-items-center gap-3">
             @if (Model.CanGoPrevious)
             {
-                <a asp-action="Index" asp-route-week="@Model.PreviousWeek" class="btn btn-outline-secondary btn-sm">&#8592;</a>
+                <a asp-action="Index" asp-route-week="@Model.PreviousWeek" asp-route-venueId="@Model.SelectedVenueId" asp-route-departmentId="@Model.SelectedDepartmentId" class="btn btn-outline-secondary btn-sm">&#8592;</a>
             }
             else
             {
@@ -24,7 +24,7 @@
 
             @if (Model.CanGoNext)
             {
-                <a asp-action="Index" asp-route-week="@Model.NextWeek" class="btn btn-outline-secondary btn-sm">&#8594;</a>
+                <a asp-action="Index" asp-route-week="@Model.NextWeek" asp-route-venueId="@Model.SelectedVenueId" asp-route-departmentId="@Model.SelectedDepartmentId" class="btn btn-outline-secondary btn-sm">&#8594;</a>
             }
             else
             {
@@ -41,14 +41,42 @@
                     <select name="venueId" class="form-select form-select-sm d-inline" style="width:auto;" onchange="this.form.submit()">
                         @foreach (var venue in Model.Venues)
                         {
-                            <option value="@venue.Id">@venue.Name</option>
+                            <option value="@venue.Id" selected="@(venue.Id == Model.SelectedVenueId)">@venue.Name</option>
                         }
                     </select>
+
+                    @* Department filter for the selected venue *@
+                    @if (Model.Departments != null && Model.Departments.Any())
+                    {
+                        <select name="departmentId" class="form-select form-select-sm d-inline ms-2" style="width:auto;" onchange="this.form.submit()">
+                            <option value="" selected="@(Model.SelectedDepartmentId == 0)">All departments</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                <option value="@d.Id" selected="@(d.Id == Model.SelectedDepartmentId)">@d.Name</option>
+                            }
+                        </select>
+                    }
                 </form>
             }
             else if (Model.Venues.Count == 1)
             {
                 <span class="badge bg-secondary">@Model.Venues.First().Name</span>
+
+                @* still show department filter when single venue *@
+                @if (Model.Departments != null && Model.Departments.Any())
+                {
+                    <form method="get" asp-action="Index" class="d-inline ms-2">
+                        <input type="hidden" name="week" value="@Model.CurrentWeek" />
+                        <input type="hidden" name="venueId" value="@Model.SelectedVenueId" />
+                        <select name="departmentId" class="form-select form-select-sm d-inline" style="width:auto;" onchange="this.form.submit()">
+                            <option value="" selected="@(Model.SelectedDepartmentId == 0)">All departments</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                <option value="@d.Id" selected="@(d.Id == Model.SelectedDepartmentId)">@d.Name</option>
+                            }
+                        </select>
+                    </form>
+                }
             }
         </div>
     </div>
@@ -98,9 +126,9 @@
                                        class="badge bg-primary mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
-                                       aria-label="My shift: @a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
+                                       aria-label="My shift: @a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.Department?.Name - @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
                                         <div class="small">@a.ScheduledShift?.Venue?.Name</div>
-                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.Department?.Name - @a.ScheduledShift?.ShiftDefinition?.Name</div>
                                         <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
                                     </a>
                                 }
@@ -127,13 +155,12 @@
                                        class="badge bg-warning text-dark mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
-                                       aria-label="Open shift: @shift.Venue?.Name @shift.ShiftDefinition?.Name @shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime">
+                                       aria-label="Open shift: @shift.Venue?.Name @shift.Department?.Name - @shift.ShiftDefinition?.Name @shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime">
 
                                         <div class="small">@shift.Venue?.Name</div>
-                                        <div class="small">@shift.ShiftDefinition?.Name</div>
+                                        <div class="small">@shift.Department?.Name - @shift.ShiftDefinition?.Name</div>
                                         <div class="small">
-                                            @shift.ShiftDefinition?.StartTime -
-                                            @shift.ShiftDefinition?.EndTime
+                                            @shift.ShiftDefinition?.StartTime - @shift.ShiftDefinition?.EndTime
                                         </div>
 
                                     </a>
@@ -175,13 +202,10 @@
                                        class="badge bg-secondary mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
-                                       aria-label="Assigned shift: @a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
+                                       aria-label="Assigned shift: @a.ScheduledShift?.Venue?.Name @a.ScheduledShift?.Department?.Name - @a.ScheduledShift?.ShiftDefinition?.Name @a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime">
                                         <div class="small">@a.ScheduledShift?.Venue?.Name</div>
-                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.Name</div>
-                                        <div class="small">
-                                            @a.ScheduledShift?.ShiftDefinition?.StartTime -
-                                            @a.ScheduledShift?.ShiftDefinition?.EndTime
-                                        </div>
+                                        <div class="small">@a.ScheduledShift?.Department?.Name - @a.ScheduledShift?.ShiftDefinition?.Name</div>
+                                        <div class="small">@a.ScheduledShift?.ShiftDefinition?.StartTime - @a.ScheduledShift?.ShiftDefinition?.EndTime</div>
 
                                     </a>
                                 }

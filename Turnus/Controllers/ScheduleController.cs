@@ -19,7 +19,7 @@ namespace Turnus.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string? week = null, int? venueId = null)
+        public async Task<IActionResult> Index(string? week = null, int? venueId = null, int? departmentId = null)
         {
             var today = DateTime.Today;
             DateTime weekStart;
@@ -61,10 +61,24 @@ namespace Turnus.Controllers
                 .Where(s => s.Date.Date >= weekStart.Date &&
                             s.Date.Date <= weekEnd.Date);
 
+            // Load venues early so we can default to the first venue when none specified
+            var venues = await _context.Venue.ToListAsync();
+
+            if (!venueId.HasValue && venues.Any())
+            {
+                venueId = venues.First().Id;
+            }
+
             if (venueId.HasValue)
             {
                 scheduledShiftsQuery = scheduledShiftsQuery
                     .Where(s => s.VenueId == venueId.Value);
+            }
+
+            if (departmentId.HasValue)
+            {
+                scheduledShiftsQuery = scheduledShiftsQuery
+                    .Where(s => s.DepartmentId == departmentId.Value);
             }
 
             var scheduledShifts = await scheduledShiftsQuery.ToListAsync();
@@ -80,7 +94,14 @@ namespace Turnus.Controllers
                 .Where(r => departmentIds.Contains(r.DepartmentId))
                 .ToListAsync();
 
-            var venues = await _context.Venue.ToListAsync();
+            // Load departments for the selected venue for the department filter
+            var departmentsForVenue = new List<Department>();
+            if (venueId.HasValue)
+            {
+                departmentsForVenue = await _context.Department
+                    .Where(d => d.VenueId == venueId.Value)
+                    .ToListAsync();
+            }
 
             var viewModel = new WeekScheduleViewModel
             {
@@ -92,6 +113,9 @@ namespace Turnus.Controllers
                 ScheduledShifts = scheduledShifts,
                 Requirements = requirements,
                 Venues = venues,
+                Departments = departmentsForVenue,
+                SelectedVenueId = venueId ?? 0,
+                SelectedDepartmentId = departmentId ?? 0,
                 CanGoPrevious = weekStart > minWeekStart,
                 CanGoNext = weekStart < maxWeekStart,
                 PreviousWeek = FormatWeek(weekStart.AddDays(-7)),
@@ -156,6 +180,9 @@ namespace Turnus.Controllers
             public List<ScheduledShift> ScheduledShifts { get; set; } = new();
             public List<VenueStaffingRequirement> Requirements { get; set; } = new();
             public List<Venue> Venues { get; set; } = new();
+            public List<Department> Departments { get; set; } = new();
+            public int SelectedVenueId { get; set; }
+            public int SelectedDepartmentId { get; set; }
             public bool CanGoPrevious { get; set; }
             public bool CanGoNext { get; set; }
             public string PreviousWeek { get; set; } = string.Empty;
