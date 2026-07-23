@@ -22,13 +22,30 @@ namespace Turnus.Controllers
         {
             var venues = await _context.Venue.ToListAsync();
 
+            // If there are no venues (fresh DB), return an empty dashboard model so the
+            // views and client-side scripts can render a friendly UI that lets the user
+            // create the first venue.
+            if (!venues.Any())
+            {
+                var emptyModel = new DashboardViewModel
+                {
+                    Venues = venues,
+                    SelectedVenue = null,
+                    Departments = new List<Department>(),
+                    SelectedDepartment = null
+                };
+
+                return View(emptyModel);
+            }
+
             var selectedVenue = venueId.HasValue
                 ? venues.FirstOrDefault(v => v.Id == venueId.Value)
                 : venues.FirstOrDefault();
 
-            var departments = await _context.Department
-                .Where(d => d.VenueId == selectedVenue!.Id)
-                .ToListAsync();
+            // Ensure we have a selected venue before querying departments.
+            var departments = selectedVenue is not null
+                ? await _context.Department.Where(d => d.VenueId == selectedVenue.Id).ToListAsync()
+                : new List<Department>();
 
             var selectedDepartment = departments
                 .FirstOrDefault(d => d.Id == departmentId)

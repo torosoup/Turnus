@@ -365,8 +365,6 @@ namespace Turnus.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex("ScheduledShiftId");
-
                     b.HasIndex("ScheduledShiftId", "EmployeeId", "RoleId")
                         .IsUnique();
 

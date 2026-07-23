@@ -453,9 +453,10 @@ namespace Turnus.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShiftAssignment_ScheduledShiftId",
+                name: "IX_ShiftAssignment_ScheduledShiftId_EmployeeId_RoleId",
                 table: "ShiftAssignment",
-                column: "ScheduledShiftId");
+                columns: new[] { "ScheduledShiftId", "EmployeeId", "RoleId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ShiftDefinition_DepartmentId",

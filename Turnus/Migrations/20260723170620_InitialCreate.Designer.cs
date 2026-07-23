@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Turnus.Migrations
 {
     [DbContext(typeof(TurnusContext))]
-    [Migration("20260713124107_FixShiftDefinitionDeleteBehavior")]
-    partial class FixShiftDefinitionDeleteBehavior
+    [Migration("20260723170620_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -368,7 +368,8 @@ namespace Turnus.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex("ScheduledShiftId");
+                    b.HasIndex("ScheduledShiftId", "EmployeeId", "RoleId")
+                        .IsUnique();
 
                     b.ToTable("ShiftAssignment");
                 });
