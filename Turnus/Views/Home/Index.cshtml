@@ -1,8 +1,104 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model Turnus.Controllers.HomeController.HomeIndexViewModel
+
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Upcoming shifts</h3>
+        <a class="btn btn-outline-primary" asp-controller="Schedule" asp-action="Index">View full schedule</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>Your upcoming shifts</strong>
+                    <span class="badge bg-secondary">Completed: @Model.CompletedShiftsCount</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.MyUpcomingAssignments == null || !Model.MyUpcomingAssignments.Any())
+                    {
+                        <p class="text-muted">You have no upcoming assigned shifts.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var a in Model.MyUpcomingAssignments)
+                            {
+                                var s = a.ScheduledShift!;
+                                <li class="list-group-item">
+                                    <a href="#" class="text-decoration-none text-dark" onclick="openShiftDetail(@s.Id, '')">
+                                        <div class="fw-bold">@s.Date.ToString("yyyy-MM-dd") @s.ShiftDefinition?.StartTime.ToString() - @s.ShiftDefinition?.EndTime.ToString()</div>
+                                        <div class="small">@s.Venue?.Name</div>
+                                        <div class="small">@s.Department?.Name - @a.Role?.Name</div>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+<!-- Shift Detail Modal -->
+<div class="modal fade" id="shiftDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="shiftDetailModalContent">
+            <!-- Partial gets loaded here -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openShiftDetail(id, week) {
+            fetch(`/Schedule/ShiftDetail?id=${id}&week=${encodeURIComponent(week || '')}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load shift details');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('shiftDetailModalContent').innerHTML = html;
+
+                    const modal = new bootstrap.Modal(document.getElementById('shiftDetailModal'));
+                    modal.show();
+                })
+                .catch(err => console.error(err));
+        }
+    </script>
+}
+
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Upcoming shifts (all venues)</strong>
+                </div>
+                <div class="card-body">
+                    @if (Model.UpcomingShifts == null || !Model.UpcomingShifts.Any())
+                    {
+                        <p class="text-muted">No upcoming shifts scheduled.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var s in Model.UpcomingShifts)
+                            {
+                                <li class="list-group-item">
+                                    <a href="#" class="text-decoration-none text-dark" onclick="openShiftDetail(@s.Id, '')">
+                                        <div class="fw-bold">@s.Date.ToString("yyyy-MM-dd") @s.ShiftDefinition?.StartTime.ToString() - @s.ShiftDefinition?.EndTime.ToString()</div>
+                                        <div class="small">@s.Venue?.Name</div>
+                                        <div class="small">@s.Department?.Name - @s.ShiftDefinition?.Name</div>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
