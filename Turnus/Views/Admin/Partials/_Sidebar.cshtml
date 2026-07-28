@@ -1,9 +1,43 @@
-﻿<div class="admin-sidebar">
+﻿@model Turnus.Controllers.AdminController.DashboardViewModel
 
-    <nav class="list-group">
-        <a class="list-group-item list-group-item-action" href="/Configuration">Configuration</a>
-        <a class="list-group-item list-group-item-action" href="/ScheduleManagement">Schedule</a>
-        <a class="list-group-item list-group-item-action" href="/UserManagement">Users</a>
+<div class="admin-sidebar">
+
+    <nav class="list-group mb-3">
+        <button type="button" class="sidebar-link list-group-item" onclick="Dashboard.showConfiguration()" id="sidebar-link-configuration">Configuration</button>
+        <button type="button" class="sidebar-link list-group-item" onclick="Dashboard.showSchedule()" id="sidebar-link-schedule">Schedule</button>
+        <button type="button" class="sidebar-link list-group-item" onclick="Dashboard.showUsers()" id="sidebar-link-users">Users</button>
+    </nav>
+
+    <div class="sidebar-title">Venues</div>
+    <nav class="list-group mb-2">
+        @if (Model?.Venues != null && Model.Venues.Any())
+        {
+            foreach (var v in Model.Venues)
+            {
+                var isSelected = Model.SelectedVenue != null && Model.SelectedVenue.Id == v.Id;
+                <div>
+                    <button type="button"
+                            class="sidebar-link list-group-item @(isSelected ? "active" : "")"
+                            onclick="Dashboard.changeVenue(@v.Id)">
+                        @v.Name
+                    </button>
+
+                    @if (isSelected && Model.Departments != null && Model.Departments.Any())
+                    {
+                        <div class="ms-3 mt-2">
+                            @foreach (var d in Model.Departments)
+                            {
+                                <button type="button" class="sidebar-link list-group-item" onclick="Dashboard.changeDepartment(@d.Id)">@d.Name</button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-muted">No venues defined</div>
+        }
     </nav>
 
 </div>
