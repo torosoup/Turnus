@@ -5,7 +5,7 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#shiftdefinition-create-form');
     }
 
@@ -14,7 +14,7 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#shiftdefinition-edit-form');
     }
 
@@ -23,7 +23,7 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#shiftdefinition-delete-form');
     }
 
@@ -45,7 +45,7 @@
                 window.location.href = response.url;
             } else {
                 const html = await response.text();
-                Modal.open(html);
+                Modal.renderGlobal(html);
             }
         });
     }

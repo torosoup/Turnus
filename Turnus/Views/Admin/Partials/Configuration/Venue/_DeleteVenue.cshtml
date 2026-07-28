@@ -1,7 +1,12 @@
 ﻿@model Turnus.Models.Venue
-<h5 class="modal-title mb-3">Delete Venue</h5>
+<div class="modal-header">
+    <h5 class="modal-title">Delete Venue</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
 <form asp-action="Delete" asp-controller="Venues" method="post" id="venue-delete-form">
     <input type="hidden" asp-for="Id" />
     <p>Are you sure you want to delete venue <strong>@Model.Name</strong>?</p>
     <button type="submit" class="btn btn-danger">Delete</button>
 </form>
+</div>

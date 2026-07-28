@@ -1,33 +1,38 @@
 @model Turnus.Models.ApplicationUser
 
-<h5 class="modal-title mb-3">Manage User Roles</h5>
+<div class="modal-header">
+    <h5 class="modal-title">Manage User Roles</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
 
-<form asp-action="Manage" asp-controller="Users" method="post" id="user-manage-form">
-    <input type="hidden" name="id" value="@Model.Id" />
+<div class="modal-body">
+    <form asp-action="Manage" asp-controller="Users" method="post" id="user-manage-form">
+        <input type="hidden" name="id" value="@Model.Id" />
 
-    <div class="mb-3">
-        <label class="form-label">Name</label>
-        <div>@Model.FullName</div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <div>@Model.Email</div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Assigned Roles</label>
-        <div>
-            @foreach (var r in (List<Turnus.Models.Role>)ViewBag.Roles)
-            {
-                var assigned = ((List<string>)ViewBag.UserRoles).Contains(r.Name);
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="selectedRoles" value="@r.Name" @(assigned ? "checked" : "") id="role_@r.Id" />
-                    <label class="form-check-label" for="role_@r.Id">@r.Name</label>
-                </div>
-            }
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <div>@Model.FullName</div>
         </div>
-    </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <div>@Model.Email</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Assigned Roles</label>
+            <div>
+                @foreach (var r in (List<Turnus.Models.Role>)ViewBag.Roles)
+                {
+                    var assigned = ((List<string>)ViewBag.UserRoles).Contains(r.Name);
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="selectedRoles" value="@r.Name" @(assigned ? "checked" : "") id="role_@r.Id" />
+                        <label class="form-check-label" for="role_@r.Id">@r.Name</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>

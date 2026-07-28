@@ -1,37 +1,42 @@
 ﻿@model Turnus.Models.ShiftAssignment
 
-<h5 class="modal-title mb-3">Assign shift</h5>
+<div class="modal-header">
+    <h5 class="modal-title">Assign shift</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
 
-<form asp-action="AssignShift"
-      asp-controller="ShiftAssignment"
-      method="post"
-      id="assignshift-form">
+<div class="modal-body">
+    <form asp-action="AssignShift"
+          asp-controller="ShiftAssignment"
+          method="post"
+          id="assignshift-form">
 
-    @Html.AntiForgeryToken()
+        @Html.AntiForgeryToken()
 
-    <input type="hidden" asp-for="ScheduledShiftId" />
+        <input type="hidden" asp-for="ScheduledShiftId" />
 
-    <input type="hidden" name="venueId" value="@ViewBag.VenueId" />
-    <input type="hidden" name="date" value="@ViewBag.Date" />
+        <input type="hidden" name="venueId" value="@ViewBag.VenueId" />
+        <input type="hidden" name="date" value="@ViewBag.Date" />
 
-    <div class="mb-3">
-        <label class="form-label">Employee</label>
-        <select asp-for="EmployeeId"
-                class="form-select"
-                asp-items="@(new SelectList(ViewBag.AllEmployees, "Id", "Email"))">
-        </select>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Employee</label>
+            <select asp-for="EmployeeId"
+                    class="form-select"
+                    asp-items="@(new SelectList(ViewBag.AllEmployees, "Id", "Email"))">
+            </select>
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Role</label>
-        <select asp-for="RoleId"
-                class="form-select"
-                asp-items="@(new SelectList(ViewBag.Roles, "Id", "Name"))">
-        </select>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select asp-for="RoleId"
+                    class="form-select"
+                    asp-items="@(new SelectList(ViewBag.Roles, "Id", "Name"))">
+            </select>
+        </div>
 
-    <button type="submit" class="btn btn-primary">
-        Assign
-    </button>
+        <button type="submit" class="btn btn-primary">
+            Assign
+        </button>
 
-</form>
+    </form>
+</div>

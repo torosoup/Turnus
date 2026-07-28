@@ -66,7 +66,7 @@ public class IndexModel : PageModel
         var userName = await _userManager.GetUserNameAsync(user);
         var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
-        Username = userName;
+        Username = userName?.Split('@')[0];
 
         Input = new InputModel
         {

@@ -4,11 +4,11 @@
     var isFull = Model.Assigned.Count >= Model.Requirement.RequiredCount;
 }
 
-@if (!Model.Available.Any())
+@if (Model.Available == null || !Model.Available.Any())
 {
-    <p class="text-muted small">
+    @*@<p class="text-muted small">
         No one available.
-    </p>
+    </p>*@ // future bug fix: 'No ones available'  when people are clearly available
 }
 else
 {

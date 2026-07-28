@@ -1,37 +1,32 @@
 ﻿@model Turnus.Models.ShiftAssignment
 
-<h5 class="modal-title mb-3">
-    Remove assignment
-</h5>
+<div class="modal-header">
+    <h5 class="modal-title">Remove assignment</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
 
-<form asp-action="UnassignShift"
-      asp-controller="ShiftAssignment"
-      method="post"
-      id="unassignshift-form">
+<div class="modal-body">
+    <form asp-action="UnassignShift"
+          asp-controller="ShiftAssignment"
+          method="post"
+          id="unassignshift-form">
 
-    @Html.AntiForgeryToken()
+        @Html.AntiForgeryToken()
 
-    <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Id" />
 
-    <input type="hidden" name="venueId" value="@ViewBag.VenueId" />
-    <input type="hidden" name="date" value="@ViewBag.Date" />
+        <input type="hidden" name="venueId" value="@ViewBag.VenueId" />
+        <input type="hidden" name="date" value="@ViewBag.Date" />
 
-    <p>
+        <p>
+            Remove
+            <strong>@Model.Employee?.FullName</strong>
+            from
+            <strong>@Model.Role?.Name</strong>
+            ?
+        </p>
 
-        Remove
+        <button class="btn btn-danger">Unassign</button>
 
-        <strong>@Model.Employee?.FullName</strong>
-
-        from
-
-        <strong>@Model.Role?.Name</strong>
-
-        ?
-
-    </p>
-
-    <button class="btn btn-danger">
-        Unassign
-    </button>
-
-</form>
+    </form>
+</div>

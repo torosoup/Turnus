@@ -6,7 +6,7 @@
         });
 
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#staffing-create-form');
         setupShiftScopedCheckbox();
     }
@@ -17,7 +17,7 @@
         });
 
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#staffing-edit-form');
         setupShiftScopedCheckbox();
     }
@@ -28,7 +28,7 @@
         });
 
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#staffing-delete-form');
     }
 
@@ -52,7 +52,7 @@
             }
             else {
                 const html = await response.text();
-                Modal.open(html);
+                Modal.renderGlobal(html);
             }
         });
     }

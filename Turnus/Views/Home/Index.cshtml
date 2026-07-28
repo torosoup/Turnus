@@ -29,7 +29,7 @@
                             {
                                 var s = a.ScheduledShift!;
                                 <li class="list-group-item">
-                                    <a href="#" class="text-decoration-none text-dark" onclick="openShiftDetail(@s.Id, '')">
+                                    <a href="#" class="text-decoration-none text-dark" onclick="window.ScheduleShiftDetails.open(@s.Id, '')">
                                         <div class="fw-bold">@s.Date.ToString("yyyy-MM-dd") @s.ShiftDefinition?.StartTime.ToString() - @s.ShiftDefinition?.EndTime.ToString()</div>
                                         <div class="small">@s.Venue?.Name</div>
                                         <div class="small">@s.Department?.Name - @a.Role?.Name</div>
@@ -43,7 +43,7 @@
         </div>
 
 <!-- Shift Detail Modal -->
-<div class="modal fade" id="shiftDetailModal" tabindex="-1" aria-hidden="true">
+        @*<div class="modal fade" id="shiftDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" id="shiftDetailModalContent">
             <!-- Partial gets loaded here -->
@@ -71,6 +71,7 @@
         }
     </script>
 }
+*@
 
         <div class="col-md-6">
             <div class="card mb-3">
@@ -88,7 +89,7 @@
                             @foreach (var s in Model.UpcomingShifts)
                             {
                                 <li class="list-group-item">
-                                    <a href="#" class="text-decoration-none text-dark" onclick="openShiftDetail(@s.Id, '')">
+                                    <a href="#" class="text-decoration-none text-dark" onclick="window.ScheduleShiftDetails.open(@s.Id, '')">
                                         <div class="fw-bold">@s.Date.ToString("yyyy-MM-dd") @s.ShiftDefinition?.StartTime.ToString() - @s.ShiftDefinition?.EndTime.ToString()</div>
                                         <div class="small">@s.Venue?.Name</div>
                                         <div class="small">@s.Department?.Name - @s.ShiftDefinition?.Name</div>

@@ -1,21 +1,35 @@
 ﻿window.Modal = (function () {
-    function open(contentHtml) {
-        const container = document.getElementById('dashboard-modal-container');
-        container.innerHTML = `
-            <div class="modal fade show" style="display:block;" tabindex="-1">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  ${contentHtml}
-                </div>
-              </div>
-            </div>
-            <div class="modal-backdrop fade show"></div>`;
+
+    function renderGlobal(contentHtml) {
+
+        const content = document.getElementById('global-modal-content');
+        content.innerHTML = contentHtml;
+
+        const modalElement = document.getElementById('global-modal');
+
+        let modal = bootstrap.Modal.getInstance(modalElement);
+
+        if (!modal) {
+            modal = new bootstrap.Modal(modalElement);
+        }
+
+        modal.show();
     }
 
     function close() {
-        const container = document.getElementById('dashboard-modal-container');
-        container.innerHTML = '';
+
+        const modalElement = document.getElementById('global-modal');
+
+        const modal = bootstrap.Modal.getInstance(modalElement);
+
+        if (modal) {
+            modal.hide();
+        }
     }
 
-    return { open, close };
+    return {
+        renderGlobal,
+        close
+    };
+
 })();

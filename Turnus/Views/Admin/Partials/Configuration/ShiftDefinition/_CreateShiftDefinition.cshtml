@@ -1,7 +1,12 @@
-﻿    @model Turnus.Models.ShiftDefinition
+﻿@model Turnus.Models.ShiftDefinition
 
-<h5 class="modal-title mb-3">Create Shift Tempelate</h5>
-<form asp-action="Create" asp-controller="ShiftDefinitions" method="post" id="shiftdefinition-create-form">
+<div class="modal-header">
+    <h5 class="modal-title">Create Shift Template</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <form asp-action="Create" asp-controller="ShiftDefinitions" method="post" id="shiftdefinition-create-form">
     <div class="mb-3">
         <label asp-for="DepartmentId" class="form-label">Department</label>
         <select asp-for="DepartmentId"
@@ -32,3 +37,4 @@
 
     <button type="submit" class="btn btn-primary">Save</button>
 </form>
+</div>

@@ -122,7 +122,7 @@
                                     </div> *@
 
                                     <a href="#"
-                                       onclick="openShiftDetail(@a.ScheduledShiftId, '@Model.CurrentWeek')"
+                                       onclick="window.ScheduleShiftDetails.open(@a.ScheduledShiftId, '@Model.CurrentWeek')"
                                        class="badge bg-primary mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
@@ -151,7 +151,7 @@
                                 @foreach (var shift in openShifts)
                                 {
                                     <a href="#"
-                                       onclick="openShiftDetail(@shift.Id, '@Model.CurrentWeek')"
+                                       onclick="window.ScheduleShiftDetails.open(@shift.Id, '@Model.CurrentWeek')"
                                        class="badge bg-warning text-dark mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
@@ -198,7 +198,7 @@
 
                                     @* In "My shifts" row — replace the div with: *@
                                     <a href="#"
-                                       onclick="openShiftDetail(@a.ScheduledShiftId, '@Model.CurrentWeek')"
+                                       onclick="window.ScheduleShiftDetails.open(@a.ScheduledShiftId, '@Model.CurrentWeek')"
                                        class="badge bg-secondary mb-1 d-block text-decoration-none"
                                        role="gridcell"
                                        tabindex="0"
@@ -223,13 +223,14 @@
     </div>
 </div>
 <!-- Shift Detail Modal -->
-<div class="modal fade" id="shiftDetailModal" tabindex="-1" aria-hidden="true">
+@*<div class="modal fade" id="shiftDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" id="shiftDetailModalContent">
             <!-- Partial gets loaded here -->
         </div>
     </div>
 </div>
+
 
 @section Scripts {
     <script>
@@ -265,4 +266,4 @@
         }
 
     </script>
-}
+}*@

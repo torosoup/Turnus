@@ -13,7 +13,7 @@
 
         const html = await response.text();
 
-        Modal.open(html);
+        Modal.renderGlobal(html);
 
         hookForms();
     }
@@ -49,7 +49,7 @@
                     const html = await response.text();
 
 
-                    Modal.open(html);
+                    Modal.renderGlobal(html);
 
 
                     hookForms();

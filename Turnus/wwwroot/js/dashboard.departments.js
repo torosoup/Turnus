@@ -4,7 +4,7 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#department-create-form');
     }
 
@@ -13,7 +13,7 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#department-edit-form');
     }
 
@@ -22,7 +22,7 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#department-delete-form');
     }
 
@@ -40,7 +40,7 @@
                 window.location.href = response.url;
             } else {
                 const html = await response.text();
-                Modal.open(html);
+                Modal.renderGlobal(html);
             }
         });
     }

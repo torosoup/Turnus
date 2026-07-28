@@ -6,7 +6,7 @@
         });
 
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
 
         hookForm('#role-create-form');
         setupScopeSelection();
@@ -19,7 +19,7 @@
         });
 
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
 
         hookForm('#role-edit-form');
         setupScopeSelection();
@@ -32,7 +32,7 @@
         });
 
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
 
         hookForm('#role-delete-form');
     }
@@ -103,7 +103,7 @@
             }
             else {
                 const html = await response.text();
-                Modal.open(html);
+                Modal.renderGlobal(html);
 
                 // Restore scope behavior after validation errors
                 setupScopeSelection();

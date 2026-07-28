@@ -1,41 +1,47 @@
 ﻿@model Turnus.Models.Role
 
-<h5 class="modal-title mb-3">Edit Role</h5>
-<form asp-action="Edit" asp-controller="Roles" method="post" id="role-edit-form">
-    <input type="hidden" asp-for="Id" />
-    <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Scope" class="form-label"></label>
-        <select asp-for="Scope" class="form-select" id="role-scope">
-            <option value="General">General</option>
-            <option value="Venue">Venue</option>
-            <option value="Department">Department</option>
-        </select>
-    </div>
-    <div class="mb-3 d-none" id="venue-selection">
-        <label asp-for="VenueId" class="form-label">Venue</label>
-        <select asp-for="VenueId" class="form-select">
-            <option value="">Select venue</option>
-            @foreach (var venue in ViewBag.Venues)
-            {
-                <option value="@venue.Id">@venue.Name</option>
-            }
-        </select>
-    </div>
+<div class="modal-header">
+    <h5 class="modal-title">Edit Role</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
 
-    <div class="mb-3 d-none" id="department-selection">
-        <label asp-for="DepartmentId" class="form-label">Department</label>
-        <select asp-for="DepartmentId" class="form-select">
-            <option value="">Select department</option>
-            @foreach (var department in ViewBag.Departments)
-            {
-                <option value="@department.Id">@department.Name</option>
-            }
-        </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+<div class="modal-body">
+    <form asp-action="Edit" asp-controller="Roles" method="post" id="role-edit-form">
+        <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Scope" class="form-label"></label>
+            <select asp-for="Scope" class="form-select" id="role-scope">
+                <option value="General">General</option>
+                <option value="Venue">Venue</option>
+                <option value="Department">Department</option>
+            </select>
+        </div>
+        <div class="mb-3 d-none" id="venue-selection">
+            <label asp-for="VenueId" class="form-label">Venue</label>
+            <select asp-for="VenueId" class="form-select">
+                <option value="">Select venue</option>
+                @foreach (var venue in ViewBag.Venues)
+                {
+                    <option value="@venue.Id">@venue.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3 d-none" id="department-selection">
+            <label asp-for="DepartmentId" class="form-label">Department</label>
+            <select asp-for="DepartmentId" class="form-select">
+                <option value="">Select department</option>
+                @foreach (var department in ViewBag.Departments)
+                {
+                    <option value="@department.Id">@department.Name</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>

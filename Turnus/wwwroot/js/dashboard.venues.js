@@ -2,21 +2,21 @@
     async function openCreateModal() {
         const response = await fetch('/Venues/Create', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#venue-create-form');
     }
 
     async function openEditModal(id) {
         const response = await fetch(`/Venues/Edit/${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#venue-edit-form');
     }
 
     async function openDeleteModal(id) {
         const response = await fetch(`/Venues/Delete/${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#venue-delete-form');
     }
 
@@ -34,7 +34,7 @@
                 window.location.href = response.url;
             } else {
                 const html = await response.text();
-                Modal.open(html); // show validation errors if any
+                Modal.renderGlobal(html); // show validation errors if any
             }
         });
     }
