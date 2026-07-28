@@ -32,9 +32,6 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Profile" asp-action="Index">My Profile</a>
-                            </li>
                             @if (User.IsInRole("Manager"))
                             {
                                 <li class="nav-item">
