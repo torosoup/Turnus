@@ -1,7 +1,12 @@
 ﻿@model Turnus.Models.Role
 
-<h5 class="modal-title mb-3">Create Role</h5>
-<form asp-action="Create" asp-controller="Roles" method="post" id="role-create-form">
+<div class="modal-header">
+    <h5 class="modal-title">Create Role</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <form asp-action="Create" asp-controller="Roles" method="post" id="role-create-form">
     <div class="mb-3">
         <label asp-for="Name" class="form-label"></label>
         <input asp-for="Name" class="form-control" />
@@ -38,4 +43,5 @@
         </select>
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
-</form>
+    </form>
+</div>

@@ -1,14 +1,19 @@
 @model Turnus.Models.ApplicationUser
 
-<h5 class="modal-title mb-3">Confirm remove user</h5>
+<div class="modal-header">
+    <h5 class="modal-title">Confirm remove user</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
 
-<form asp-action="Delete" asp-controller="Users" method="post" id="user-delete-form">
-    <input type="hidden" name="id" value="@Model.Id" />
+<div class="modal-body">
+    <form asp-action="Delete" asp-controller="Users" method="post" id="user-delete-form">
+        <input type="hidden" name="id" value="@Model.Id" />
 
-    <div class="mb-3">
-        <p>Are you sure you want to remove <strong>@Model.FullName</strong> (&lt;@Model.Email&gt;)? This action cannot be undone.</p>
-    </div>
+        <div class="mb-3">
+            <p>Are you sure you want to remove <strong>@Model.FullName</strong> (&lt;@Model.Email&gt;)? This action cannot be undone.</p>
+        </div>
 
-    <button type="submit" class="btn btn-danger">Remove</button>
-    <button type="button" class="btn btn-secondary" onclick="Modal.close()">Cancel</button>
-</form>
+        <button type="submit" class="btn btn-danger">Remove</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    </form>
+</div>

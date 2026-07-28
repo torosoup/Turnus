@@ -10,13 +10,12 @@
     var dayScoped = requirements.Where(r => !r.IsShiftScoped).ToList();
     var shiftScoped = requirements.Where(r => r.IsShiftScoped).ToList();
 }
-
+<div class="modal-header">
+    <h5 class="modal-title">Review Staffing</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="window.Modal.close()"></button>
+</div>
+<div class="modal-body">
 <div id="schedule-review-modal">
-
-    <h5 class="modal-title mb-2">
-        Review Staffing
-    </h5>
-
     <div class="text-muted mb-3">
         @venue?.Name — @date.ToShortDateString()
     </div>
@@ -56,5 +55,6 @@
         }
     }
 
+</div>
 </div>
 

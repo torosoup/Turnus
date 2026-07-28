@@ -45,7 +45,7 @@ namespace Turnus.Controllers
                 .ToListAsync();
 
             var availability = await _context.Availability
-                .Where(a => shiftIds.Contains(a.ScheduledShiftId) && a.IsAvailable)
+                .Where(a => shiftIds.Contains(a.ScheduledShiftId) && a.IsAvailable) // future bug fix: 'No ones available'  when people are clearly available
                 .Include(a => a.Employee)
                 .ToListAsync();
 

@@ -22,7 +22,7 @@
             }
         });
 
-        Modal.open(await response.text());
+        Modal.renderGlobal(await response.text());
 
         hookForm("#assignshift-form");
     }
@@ -40,7 +40,7 @@
                 }
             });
 
-        Modal.open(await response.text());
+        Modal.renderGlobal(await response.text());
 
         hookForm("#unassignshift-form");
     }
@@ -66,7 +66,7 @@
             if (response.redirected)
                 window.location.href = response.url;
             else
-                Modal.open(await response.text());
+                Modal.renderGlobal(await response.text());
 
         });
     }

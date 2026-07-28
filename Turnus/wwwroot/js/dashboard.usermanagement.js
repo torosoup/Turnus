@@ -3,20 +3,20 @@ window.DashboardUserManagement = (function () {
     async function openManageModal(id) {
         const response = await fetch(`/Users/Manage?id=${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#user-manage-form');
     }
 
     async function openInspectModal(id) {
         const response = await fetch(`/Users/Details?id=${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
     }
 
     async function openDeleteModal(id) {
         const response = await fetch(`/Users/Delete?id=${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const html = await response.text();
-        Modal.open(html);
+        Modal.renderGlobal(html);
         hookForm('#user-delete-form');
     }
 
@@ -38,7 +38,7 @@ window.DashboardUserManagement = (function () {
                 window.location.href = response.url;
             } else {
                 const html = await response.text();
-                Modal.open(html);
+                Modal.renderGlobal(html);
             }
         });
     }

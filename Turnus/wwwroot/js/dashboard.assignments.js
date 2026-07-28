@@ -4,7 +4,7 @@
         const response = await fetch(`/ScheduleReview/AssignShift?scheduledShiftId=${scheduledShiftId}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
-        Modal.open(await response.text());
+        Modal.renderGlobal(await response.text());
         hookForm('#assignshift-form');
     }
 
@@ -12,7 +12,7 @@
         const response = await fetch(`/ScheduleReview/UnassignShift?shiftAssignmentId=${shiftAssignmentId}&venueId=${venueId}&date=${date}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
-        Modal.open(await response.text());
+        Modal.renderGlobal(await response.text());
         hookForm('#unassignshift-form');
     }
 
@@ -32,7 +32,7 @@
             if (response.redirected) {
                 window.location.href = response.url;
             } else {
-                Modal.open(await response.text());
+                Modal.renderGlobal(await response.text());
             }
         });
     }

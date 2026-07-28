@@ -4,7 +4,7 @@
         const response = await fetch(`/ScheduledShifts/Create?venueId=${venueId}&departmentId=${departmentId}&date=${date}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
-        Modal.open(await response.text());
+        Modal.renderGlobal(await response.text());
         hookForm('#scheduledshift-create-form');
     }
 
@@ -12,7 +12,7 @@
         const response = await fetch(`/ScheduledShifts/Delete/${id}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
-        Modal.open(await response.text());
+        Modal.renderGlobal(await response.text());
         hookForm('#scheduledshift-delete-form');
     }
 
@@ -32,7 +32,7 @@
             if (response.redirected) {
                 window.location.href = response.url;
             } else {
-                Modal.open(await response.text());
+                Modal.renderGlobal(await response.text());
             }
         });
     }

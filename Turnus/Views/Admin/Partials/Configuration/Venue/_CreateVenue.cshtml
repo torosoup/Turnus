@@ -1,8 +1,18 @@
 ﻿
 @model Turnus.Models.Venue
 
-<h5 class="modal-title mb-3">Create Venue</h5>
+<div class="modal-header">
+    <h5 class="modal-title">
+        Create Venue
+    </h5>
 
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="modal">
+    </button>
+</div>
+
+<div class="modal-body">
 <form asp-action="Create" asp-controller="Venues" method="post" id="venue-create-form">
     <div class="mb-3">
         <label asp-for="Name" class="form-label"></label>
@@ -11,3 +21,4 @@
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
 </form>
+</div>
