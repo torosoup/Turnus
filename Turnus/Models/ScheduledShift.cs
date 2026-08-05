@@ -24,6 +24,12 @@ namespace Turnus.Models
         [ForeignKey("ShiftDefinitionId")]
         public ShiftDefinition? ShiftDefinition { get; set; }
 
+        // Workspace tenancy
+        public int? WorkspaceId { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("WorkspaceId")]
+        public Workspace? Workspace { get; set; }
+
         [Required]
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }

@@ -7,20 +7,25 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "WorkspaceMember")]
     public class ScheduleController : Controller
     {
         private readonly TurnusContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public ScheduleController(TurnusContext context, UserManager<ApplicationUser> userManager)
+        public ScheduleController(TurnusContext context, UserManager<ApplicationUser> userManager, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
             _userManager = userManager;
+            _workspaceProvider = workspaceProvider;
         }
 
         public async Task<IActionResult> Index(string? week = null, int? venueId = null, int? departmentId = null)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var today = DateTime.Today;
             DateTime weekStart;
 

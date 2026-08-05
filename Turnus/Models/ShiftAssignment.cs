@@ -24,5 +24,11 @@ namespace Turnus.Models
 
         [ForeignKey("RoleId")]
         public Role? Role { get; set; }
+
+        // Workspace tenancy
+        public int? WorkspaceId { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("WorkspaceId")]
+        public Workspace? Workspace { get; set; }
     }
 }

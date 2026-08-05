@@ -5,21 +5,26 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class ScheduleReviewController : Controller
     {
         private readonly TurnusContext _context;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public ScheduleReviewController(TurnusContext context)
+        public ScheduleReviewController(TurnusContext context, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
+            _workspaceProvider = workspaceProvider;
         }
 
         // GET: /ScheduleReview/Review?venueId=1&date=2026-07-14
         public async Task<IActionResult> Review(int venueId, DateTime date)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var venue = await _context.Venue.FindAsync(venueId);
-            if (venue == null) return NotFound();
+            if (venue == null || venue.WorkspaceId != wsId.Value) return NotFound();
 
             var shifts = await _context.ScheduledShift
                 .Include(s => s.Department)
@@ -28,7 +33,7 @@ namespace Turnus.Controllers
                     .ThenInclude(a => a.Employee)
                 .Include(s => s.ShiftAssignments)
                     .ThenInclude(a => a.Role)
-                .Where(s => s.VenueId == venueId && s.Date.Date == date.Date)
+                .Where(s => s.VenueId == venueId && s.Date.Date == date.Date && s.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
             var shiftIds = shifts.Select(s => s.Id).ToList();
@@ -41,15 +46,22 @@ namespace Turnus.Controllers
 
             var requirements = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
-                .Where(r => departmentIds.Contains(r.DepartmentId))
+                .Where(r => departmentIds.Contains(r.DepartmentId) && r.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
             var availability = await _context.Availability
-                .Where(a => shiftIds.Contains(a.ScheduledShiftId) && a.IsAvailable) // future bug fix: 'No ones available'  when people are clearly available
+                .Where(a => shiftIds.Contains(a.ScheduledShiftId) && a.IsAvailable && a.WorkspaceId == wsId.Value)
                 .Include(a => a.Employee)
                 .ToListAsync();
 
+            // Only include users who are members of the workspace
+            var userIds = await _context.WorkspaceMember
+                .Where(wm => wm.WorkspaceId == wsId.Value)
+                .Select(wm => wm.UserId)
+                .ToListAsync();
+
             var allEmployees = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
                 .Cast<ApplicationUser>()
                 .ToListAsync();
 

@@ -2,17 +2,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
+using Turnus.Services;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class ShiftAssignmentController : Controller
     {
         private readonly TurnusContext _context;
+        private readonly ICurrentWorkspaceProvider _workspaceProvider;
 
-        public ShiftAssignmentController(TurnusContext context)
+        public ShiftAssignmentController(TurnusContext context, ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
+            _workspaceProvider = workspaceProvider;
         }
 
         // -------------------------------------------------
@@ -26,12 +29,24 @@ namespace Turnus.Controllers
             DateTime date,
             string? employeeId = null)
         {
+            // Verify active workspace and membership
+            var currentWorkspaceId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!currentWorkspaceId.HasValue) return Forbid();
+
+            // Verify scheduled shift belongs to the current workspace
+            var ssCheck = await _context.ScheduledShift.FindAsync(scheduledShiftId);
+            if (ssCheck == null || ssCheck.WorkspaceId != currentWorkspaceId.Value) return NotFound();
+
+            // Verify role belongs to current workspace
+            var roleCheck = await _context.Role.FindAsync(roleId);
+            if (roleCheck == null || roleCheck.WorkspaceId != currentWorkspaceId.Value) return NotFound();
+
             ViewBag.AllEmployees = await _context.Users
                 .Cast<ApplicationUser>()
                 .ToListAsync();
 
             ViewBag.Roles = await _context.Role
-                .Where(r => r.Id == roleId)
+                .Where(r => r.Id == roleId && r.WorkspaceId == currentWorkspaceId.Value)
                 .ToListAsync();
 
             ViewBag.VenueId = venueId;
@@ -58,6 +73,9 @@ namespace Turnus.Controllers
             int venueId,
             DateTime date)
         {
+            var currentWorkspaceId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!currentWorkspaceId.HasValue) return Forbid();
+
             if (!await _context.ShiftAssignment.AnyAsync(a =>
                     a.ScheduledShiftId == model.ScheduledShiftId &&
                     a.EmployeeId == model.EmployeeId && 
@@ -73,11 +91,19 @@ namespace Turnus.Controllers
                     return BadRequest();
                 }
 
+                // Ensure scheduled shift is in the current workspace
+                if (scheduledShift.WorkspaceId != currentWorkspaceId.Value) return Forbid();
+
+                // Ensure the role belongs to the current workspace
+                var role = await _context.Role.FindAsync(model.RoleId);
+                if (role == null || role.WorkspaceId != currentWorkspaceId.Value) return Forbid();
+
                 // Find the staffing requirement matching the role + department (the UI filters requirements by DepartmentId)
                 var requirement = await _context.VenueStaffingRequirement
                     .FirstOrDefaultAsync(r =>
                         r.RoleId == model.RoleId &&
-                        r.DepartmentId == scheduledShift.DepartmentId);
+                        r.DepartmentId == scheduledShift.DepartmentId &&
+                        r.WorkspaceId == currentWorkspaceId.Value);
 
                 // Prevent an employee being assigned more than one role for the same scheduled shift
                 if (!string.IsNullOrEmpty(model.EmployeeId))
@@ -95,7 +121,7 @@ namespace Turnus.Controllers
                     // Load existing assignments for this employee (exclude current scheduled shift)
                     var existingAssignments = await _context.ShiftAssignment
                         .Include(a => a.ScheduledShift).ThenInclude(s => s.ShiftDefinition)
-                        .Where(a => a.EmployeeId == model.EmployeeId && a.ScheduledShiftId != model.ScheduledShiftId)
+                        .Where(a => a.EmployeeId == model.EmployeeId && a.ScheduledShiftId != model.ScheduledShiftId && a.WorkspaceId == currentWorkspaceId.Value)
                         .ToListAsync();
 
                     if (scheduledShift?.ShiftDefinition != null)
@@ -137,7 +163,8 @@ namespace Turnus.Controllers
                         assignedCount = await _context.ShiftAssignment
                             .CountAsync(a =>
                                 a.ScheduledShiftId == model.ScheduledShiftId &&
-                                a.RoleId == model.RoleId);
+                                a.RoleId == model.RoleId &&
+                                a.WorkspaceId == currentWorkspaceId.Value);
                     }
                     else
                     {

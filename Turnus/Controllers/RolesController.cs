@@ -4,20 +4,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
-[Authorize(Roles = "Manager")]
+[Authorize(Policy = "WorkspaceManager")]
 public class RolesController : Controller
 {
     private readonly TurnusContext _context;
+    private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-    public RolesController(TurnusContext context)
+    public RolesController(TurnusContext context, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
     {
         _context = context;
+        _workspaceProvider = workspaceProvider;
     }
 
     // GET: ROLES
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.Role.ToListAsync());
+        var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
+
+        return View(await _context.Role.Where(r => r.WorkspaceId == wsId.Value).ToListAsync());
     }
 
     // GET: ROLES/Details/5
@@ -27,9 +32,11 @@ public class RolesController : Controller
         {
             return NotFound();
         }
+        var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
 
         var role = await _context.Role
-            .FirstOrDefaultAsync(m => m.Id == id);
+            .FirstOrDefaultAsync(m => m.Id == id && m.WorkspaceId == wsId.Value);
         if (role == null)
         {
             return NotFound();
@@ -41,8 +48,11 @@ public class RolesController : Controller
     // GET: ROLES/Create
     public async Task<IActionResult> Create()
     {
-        ViewBag.Venues = await _context.Venue.ToListAsync();
-        ViewBag.Departments = await _context.Department.ToListAsync();
+        var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
+
+        ViewBag.Venues = await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync();
+        ViewBag.Departments = await _context.Department.Where(d => d.WorkspaceId == wsId.Value).ToListAsync();
 
         return PartialView(
             "~/Views/Admin/Partials/Configuration/Role/_CreateRole.cshtml",
@@ -76,8 +86,11 @@ public class RolesController : Controller
             return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = role.DepartmentId });
         }
 
-        ViewBag.Venues = await _context.Venue.ToListAsync();
-        ViewBag.Departments = await _context.Department.ToListAsync();
+        var wsId = await HttpContext.RequestServices.GetRequiredService<Turnus.Services.ICurrentWorkspaceProvider>().GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
+
+        ViewBag.Venues = await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync();
+        ViewBag.Departments = await _context.Department.Where(d => d.WorkspaceId == wsId.Value).ToListAsync();
 
         return PartialView(
             "~/Views/Admin/Partials/Configuration/Role/_CreateRole.cshtml",
@@ -91,16 +104,18 @@ public class RolesController : Controller
         {
             return NotFound();
         }
+        var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
 
-        var role = await _context.Role.FindAsync(id);
+        var role = await _context.Role.FirstOrDefaultAsync(r => r.Id == id && r.WorkspaceId == wsId.Value);
 
         if (role == null)
         {
             return NotFound();
         }
 
-        ViewBag.Venues = await _context.Venue.ToListAsync();
-        ViewBag.Departments = await _context.Department.ToListAsync();
+        ViewBag.Venues = await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync();
+        ViewBag.Departments = await _context.Department.Where(d => d.WorkspaceId == wsId.Value).ToListAsync();
 
         return PartialView(
             "~/Views/Admin/Partials/Configuration/Role/_EditRole.cshtml",
@@ -123,17 +138,22 @@ public class RolesController : Controller
         {
             try
             {
-                // Verify the department exists before updating
+                var wsId = await HttpContext.RequestServices.GetRequiredService<Turnus.Services.ICurrentWorkspaceProvider>().GetWorkspaceIdAsync();
+                if (!wsId.HasValue) return Forbid();
+
+                // Verify the department exists and belongs to the workspace before updating
                 var dept = await _context.Department.FindAsync(role.DepartmentId);
-                if (dept == null)
+                if (dept == null || dept.WorkspaceId != wsId.Value)
                 {
                     ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
-                    ViewBag.Venues = await _context.Venue.ToListAsync();
-                    ViewBag.Departments = await _context.Department.ToListAsync();
+                    ViewBag.Venues = await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync();
+                    ViewBag.Departments = await _context.Department.Where(d => d.WorkspaceId == wsId.Value).ToListAsync();
                     return PartialView(
                         "~/Views/Admin/Partials/Configuration/Role/_EditRole.cshtml",
                         role);
                 }
+
+                role.WorkspaceId = wsId.Value;
                 _context.Update(role);
                 await _context.SaveChangesAsync();
             }
@@ -165,9 +185,11 @@ public class RolesController : Controller
         {
             return NotFound();
         }
+        var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
 
         var role = await _context.Role
-            .FirstOrDefaultAsync(m => m.Id == id);
+            .FirstOrDefaultAsync(m => m.Id == id && m.WorkspaceId == wsId.Value);
         if (role == null)
         {
             return NotFound();
@@ -181,17 +203,21 @@ public class RolesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var role = await _context.Role.FindAsync(id);
+        var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+        if (!wsId.HasValue) return Forbid();
+
+        var role = await _context.Role.FirstOrDefaultAsync(r => r.Id == id && r.WorkspaceId == wsId.Value);
         if (role != null)
         {
             _context.Role.Remove(role);
+            await _context.SaveChangesAsync();
+
+            // Redirect back to the dashboard with context for the deleted role
+            var deptForDeleted = await _context.Department.FindAsync(role.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = deptForDeleted?.VenueId, departmentId = role.DepartmentId });
         }
 
-        await _context.SaveChangesAsync();
-
-        // Redirect back to the dashboard with context for the deleted role
-        var deptForDeleted = await _context.Department.FindAsync(role?.DepartmentId);
-        return RedirectToAction("Dashboard", "Admin", new { venueId = deptForDeleted?.VenueId, departmentId = role?.DepartmentId });
+        return NotFound();
     }
 
     private bool RoleExists(int? id)
