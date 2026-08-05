@@ -22,13 +22,13 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore
-      run: dotnet restore ./Turnus.slnx
+      run: dotnet restore ./Turnus/Turnus.csproj
 
     - name: Build
-      run: dotnet build ./Turnus.slnx --configuration Release --no-restore
+      run: dotnet build ./Turnus/Turnus.csproj --configuration Release --no-restore
 
     - name: Publish
-      run: dotnet publish ./Turnus.slnx --configuration Release --no-build --output '${{env.AZURE_WEBAPP_PACKAGE_PATH}}'
+      run: dotnet publish ./Turnus/Turnus.csproj --configuration Release --no-build --output '${{env.AZURE_WEBAPP_PACKAGE_PATH}}'
 
     - name: Deployment
       uses: azure/webapps-deploy@v3
