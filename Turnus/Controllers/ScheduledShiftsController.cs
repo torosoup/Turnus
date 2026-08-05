@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
 namespace Turnus.Controllers
 {
+    [Authorize(Roles = "Manager")]
     public class ScheduledShiftsController : Controller
     {
         private readonly TurnusContext _context;
@@ -32,8 +34,19 @@ namespace Turnus.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ScheduledShift model)
         {
+            // Verify department exists and belongs to the selected venue
+            if (model.DepartmentId != null)
+            {
+                var dept = await _context.Department.FindAsync(model.DepartmentId);
+                if (dept == null || dept.VenueId != model.VenueId)
+                {
+                    ModelState.AddModelError("DepartmentId", "Selected department is invalid for the chosen venue.");
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.ShiftDefinitions = await _context.ShiftDefinition.ToListAsync();
@@ -56,9 +69,12 @@ namespace Turnus.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(ScheduledShift model)
         {
             var shift = await _context.ScheduledShift.FindAsync(model.Id);
+            if (shift == null) return NotFound();
+
             _context.ScheduledShift.Remove(shift);
             await _context.SaveChangesAsync();
 
