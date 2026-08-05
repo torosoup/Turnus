@@ -1,0 +1,30 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+    - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore
+      run: dotnet restore ./Turnus.slnx
+
+    - name: Build
+      run: dotnet build ./Turnus.slnx --configuration Release --no-restore
+
+    - name: Publish
+      run: dotnet publish ./Turnus.slnx --configuration Release --no-build
+    
+    
