@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
 namespace Turnus.Controllers
 {
+    [Authorize(Roles = "Manager")]
     public class ShiftDefinitionsController : Controller
     {
         private readonly TurnusContext _context;
@@ -23,8 +25,16 @@ namespace Turnus.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ShiftDefinition model)
         {
+            // Verify department exists
+            var deptCheck = await _context.Department.FindAsync(model.DepartmentId);
+            if (deptCheck == null)
+            {
+                ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Departments = await _context.Department.ToListAsync();
@@ -59,8 +69,16 @@ namespace Turnus.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ShiftDefinition model)
         {
+            // Verify department exists
+            var deptCheck = await _context.Department.FindAsync(model.DepartmentId);
+            if (deptCheck == null)
+            {
+                ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Departments = await _context.Department.ToListAsync();

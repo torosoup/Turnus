@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
 namespace Turnus.Controllers
 {
+    [Authorize(Roles = "Manager")]
     public class StaffingRequirementsController : Controller
     {
         private readonly TurnusContext _context;
@@ -24,6 +26,7 @@ namespace Turnus.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(VenueStaffingRequirement model)
         {
             var role = await _context.Role.FindAsync(model.RoleId);
@@ -64,6 +67,7 @@ namespace Turnus.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
 public async Task<IActionResult> Edit(VenueStaffingRequirement model)
 {
     var role = await _context.Role.FindAsync(model.RoleId);
@@ -102,14 +106,17 @@ public async Task<IActionResult> Edit(VenueStaffingRequirement model)
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(VenueStaffingRequirement model)
         {
             var req = await _context.VenueStaffingRequirement.FindAsync(model.Id);
-    _context.VenueStaffingRequirement.Remove(req);
-    await _context.SaveChangesAsync();
+            if (req == null) return NotFound();
 
-    var dept = await _context.Department.FindAsync(req.DepartmentId);
-    return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = req.DepartmentId });
+            _context.VenueStaffingRequirement.Remove(req);
+            await _context.SaveChangesAsync();
+
+            var dept = await _context.Department.FindAsync(req.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = req.DepartmentId });
         }
     }
 }

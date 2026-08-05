@@ -1,8 +1,10 @@
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
 
+[Authorize(Roles = "Manager")]
 public class RolesController : Controller
 {
     private readonly TurnusContext _context;
@@ -56,9 +58,19 @@ public class RolesController : Controller
     {
         if (ModelState.IsValid)
         {
+            // Verify the department exists
+            var deptCheck = await _context.Department.FindAsync(role.DepartmentId);
+            if (deptCheck == null)
+            {
+                ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
+                ViewBag.Venues = await _context.Venue.ToListAsync();
+                ViewBag.Departments = await _context.Department.ToListAsync();
+                return PartialView(
+                    "~/Views/Admin/Partials/Configuration/Role/_CreateRole.cshtml",
+                    role);
+            }
             _context.Add(role);
             await _context.SaveChangesAsync();
-
             // Preserve dashboard context: role -> department -> venue
             var dept = await _context.Department.FindAsync(role.DepartmentId);
             return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = role.DepartmentId });
@@ -111,6 +123,17 @@ public class RolesController : Controller
         {
             try
             {
+                // Verify the department exists before updating
+                var dept = await _context.Department.FindAsync(role.DepartmentId);
+                if (dept == null)
+                {
+                    ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
+                    ViewBag.Venues = await _context.Venue.ToListAsync();
+                    ViewBag.Departments = await _context.Department.ToListAsync();
+                    return PartialView(
+                        "~/Views/Admin/Partials/Configuration/Role/_EditRole.cshtml",
+                        role);
+                }
                 _context.Update(role);
                 await _context.SaveChangesAsync();
             }

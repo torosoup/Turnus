@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -5,6 +6,7 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
+    [Authorize(Roles = "Manager")]
     public class UsersController : Controller
     {
         private readonly TurnusContext _context;
@@ -34,6 +36,20 @@ namespace Turnus.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            // Prevent managers from modifying their own roles to avoid privilege changes via UI
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == id)
+            {
+                return Forbid();
+            }
+
+            // Prevent role changes to other manager accounts (require higher privilege)
+            var isTargetManager = await _userManager.IsInRoleAsync(user, "Manager");
+            if (isTargetManager)
+            {
+                return Forbid();
+            }
 
             var currentRoles = await _userManager.GetRolesAsync(user);
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
@@ -82,6 +98,14 @@ namespace Turnus.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
+                var currentUserId = _userManager.GetUserId(User);
+
+                // Prevent deleting yourself
+                if (currentUserId == user.Id) return Forbid();
+
+                // Prevent deleting other manager accounts via this UI
+                if (await _userManager.IsInRoleAsync(user, "Manager")) return Forbid();
+
                 await _userManager.DeleteAsync(user);
             }
 
