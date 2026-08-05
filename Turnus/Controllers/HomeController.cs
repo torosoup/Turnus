@@ -11,12 +11,14 @@ namespace Turnus.Controllers
         private readonly TurnusContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public HomeController(TurnusContext context, UserManager<ApplicationUser> userManager, Microsoft.Extensions.Configuration.IConfiguration configuration)
+        public HomeController(TurnusContext context, UserManager<ApplicationUser> userManager, Microsoft.Extensions.Configuration.IConfiguration configuration, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
             _userManager = userManager;
             _configuration = configuration;
+            _workspaceProvider = workspaceProvider;
         }
 
         public async Task<IActionResult> Index()
@@ -27,11 +29,27 @@ namespace Turnus.Controllers
             var upcomingDays = _configuration.GetValue<int?>("Home:UpcomingDays") ?? 30;
 
             // Upcoming general shifts (next upcomingDays)
-            var upcomingShifts = await _context.ScheduledShift
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+
+            // If no workspace is active, fall back to the first (default) workspace if present.
+            if (!wsId.HasValue)
+            {
+                var firstWs = await _context.Workspace.FirstOrDefaultAsync();
+                wsId = firstWs?.Id;
+            }
+
+            var upcomingQuery = _context.ScheduledShift
                 .Include(s => s.Venue)
                 .Include(s => s.Department)
                 .Include(s => s.ShiftDefinition)
-                .Where(s => s.Date.Date >= today && s.Date.Date <= today.AddDays(upcomingDays))
+                .Where(s => s.Date.Date >= today && s.Date.Date <= today.AddDays(upcomingDays));
+
+            if (wsId.HasValue)
+            {
+                upcomingQuery = upcomingQuery.Where(s => s.WorkspaceId == wsId.Value);
+            }
+
+            var upcomingShifts = await upcomingQuery
                 .OrderBy(s => s.Date)
                 .Take(10)
                 .ToListAsync();
@@ -43,7 +61,7 @@ namespace Turnus.Controllers
             {
                 var userId = _userManager.GetUserId(User)!;
 
-                myUpcoming = await _context.ShiftAssignment
+                var assignmentQuery = _context.ShiftAssignment
                     .Include(a => a.ScheduledShift!)
                         .ThenInclude(s => s.Venue)
                     .Include(a => a.ScheduledShift!)
@@ -51,15 +69,28 @@ namespace Turnus.Controllers
                     .Include(a => a.ScheduledShift!)
                         .ThenInclude(s => s.ShiftDefinition)
                     .Include(a => a.Role)
-                    .Where(a => a.EmployeeId == userId && a.ScheduledShift != null && a.ScheduledShift.Date.Date >= today)
+                    .Where(a => a.EmployeeId == userId && a.ScheduledShift != null && a.ScheduledShift.Date.Date >= today);
+
+                if (wsId.HasValue)
+                {
+                    assignmentQuery = assignmentQuery.Where(a => a.WorkspaceId == wsId.Value);
+                }
+
+                myUpcoming = await assignmentQuery
                     .OrderBy(a => a.ScheduledShift!.Date)
                     .Take(10)
                     .ToListAsync();
 
-                completedCount = await _context.ShiftAssignment
+                var completedQuery = _context.ShiftAssignment
                     .Include(a => a.ScheduledShift!)
-                    .Where(a => a.EmployeeId == userId && a.ScheduledShift != null && a.ScheduledShift.Date.Date < today)
-                    .CountAsync();
+                    .Where(a => a.EmployeeId == userId && a.ScheduledShift != null && a.ScheduledShift.Date.Date < today);
+
+                if (wsId.HasValue)
+                {
+                    completedQuery = completedQuery.Where(a => a.WorkspaceId == wsId.Value);
+                }
+
+                completedCount = await completedQuery.CountAsync();
             }
 
             var model = new HomeIndexViewModel

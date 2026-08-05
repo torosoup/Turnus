@@ -6,20 +6,26 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class DepartmentsController : Controller
     {
         private readonly TurnusContext _context;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public DepartmentsController(TurnusContext context)
+        public DepartmentsController(TurnusContext context, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
+            _workspaceProvider = workspaceProvider;
         }
 
         public async Task<IActionResult> Index()
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             return View(await _context.Department
                 .Include(d => d.Venue)
+                .Where(d => d.WorkspaceId == wsId.Value)
                 .ToListAsync());
         }
 
@@ -39,9 +45,14 @@ namespace Turnus.Controllers
             return View(department);
         }
 
-        public IActionResult Create(int? venueId)
+        public async Task<IActionResult> Create(int? venueId)
         {
-            ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", venueId);
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
+            ViewData["VenueId"] = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync(),
+                "Id", "Name", venueId);
             return PartialView("~/Views/Admin/Partials/Configuration/Department/_CreateDepartment.cshtml");
         }
 
@@ -49,13 +60,27 @@ namespace Turnus.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,VenueId,Name")] Department department)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
+            // Ensure the selected venue belongs to the workspace
+            var venue = await _context.Venue.FindAsync(department.VenueId);
+            if (venue == null || venue.WorkspaceId != wsId.Value)
+            {
+                ModelState.AddModelError("VenueId", "Selected venue is invalid.");
+            }
+
             if (ModelState.IsValid)
             {
+                department.WorkspaceId = wsId.Value;
                 _context.Add(department);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Dashboard", "Admin", new { venueId = department.VenueId, departmentId = department.Id });
             }
-            ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
+
+            ViewData["VenueId"] = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync(),
+                "Id", "Name", department.VenueId);
             return PartialView("~/Views/Admin/Partials/Configuration/Department/_CreateDepartment.cshtml", department);
         }
 
@@ -63,10 +88,15 @@ namespace Turnus.Controllers
         {
             if (id == null) return NotFound();
 
-            var department = await _context.Department.FindAsync(id);
-            if (department == null) return NotFound();
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
 
-            ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
+            var department = await _context.Department.FindAsync(id);
+            if (department == null || department.WorkspaceId != wsId.Value) return NotFound();
+
+            ViewData["VenueId"] = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync(),
+                "Id", "Name", department.VenueId);
             return PartialView("~/Views/Admin/Partials/Configuration/Department/_EditDepartment.cshtml", department);
         }
 
@@ -74,12 +104,26 @@ namespace Turnus.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,VenueId,Name")] Department department)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             if (id != department.Id) return NotFound();
+
+            // Ensure existing department belongs to workspace and venue belongs to workspace
+            var existing = await _context.Department.FindAsync(id);
+            if (existing == null || existing.WorkspaceId != wsId.Value) return NotFound();
+
+            var venue = await _context.Venue.FindAsync(department.VenueId);
+            if (venue == null || venue.WorkspaceId != wsId.Value)
+            {
+                ModelState.AddModelError("VenueId", "Selected venue is invalid.");
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    department.WorkspaceId = wsId.Value;
                     _context.Update(department);
                     await _context.SaveChangesAsync();
                 }
@@ -90,7 +134,10 @@ namespace Turnus.Controllers
                 }
                 return RedirectToAction("Dashboard", "Admin");
             }
-            ViewData["VenueId"] = new SelectList(_context.Venue, "Id", "Name", department.VenueId);
+
+            ViewData["VenueId"] = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                await _context.Venue.Where(v => v.WorkspaceId == wsId.Value).ToListAsync(),
+                "Id", "Name", department.VenueId);
             return PartialView("~/Views/Admin/Partials/Configuration/Department/_EditDepartment.cshtml", department);
         }
 
@@ -98,9 +145,12 @@ namespace Turnus.Controllers
         {
             if (id == null) return NotFound();
 
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var department = await _context.Department
                 .Include(d => d.Venue)
-                .FirstOrDefaultAsync(d => d.Id == id);
+                .FirstOrDefaultAsync(d => d.Id == id && d.WorkspaceId == wsId.Value);
 
             if (department == null) return NotFound();
 
@@ -111,8 +161,13 @@ namespace Turnus.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var department = await _context.Department.FindAsync(id);
-            if (department != null) _context.Department.Remove(department);
+            if (department == null || department.WorkspaceId != wsId.Value) return NotFound();
+
+            _context.Department.Remove(department);
             await _context.SaveChangesAsync();
             // After deletion, preserve venue context but department no longer exists
             return RedirectToAction("Dashboard", "Admin", new { venueId = department?.VenueId });

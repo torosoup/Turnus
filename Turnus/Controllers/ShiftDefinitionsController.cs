@@ -5,19 +5,24 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class ShiftDefinitionsController : Controller
     {
         private readonly TurnusContext _context;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public ShiftDefinitionsController(TurnusContext context)
+        public ShiftDefinitionsController(TurnusContext context, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
+            _workspaceProvider = workspaceProvider;
         }
 
         public async Task<IActionResult> Create()
         {
-            ViewBag.Departments = await _context.Department.ToListAsync();
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
+            ViewBag.Departments = await _context.Department.Where(d => d.WorkspaceId == wsId.Value).ToListAsync();
 
             return PartialView(
                 "~/Views/Admin/Partials/Configuration/ShiftDefinition/_CreateShiftDefinition.cshtml",
@@ -28,22 +33,26 @@ namespace Turnus.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ShiftDefinition model)
         {
-            // Verify department exists
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
+            // Verify department exists and belongs to workspace
             var deptCheck = await _context.Department.FindAsync(model.DepartmentId);
-            if (deptCheck == null)
+            if (deptCheck == null || deptCheck.WorkspaceId != wsId.Value)
             {
                 ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
             }
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Departments = await _context.Department.ToListAsync();
+                ViewBag.Departments = await _context.Department.Where(d => d.WorkspaceId == wsId.Value).ToListAsync();
 
                 return PartialView(
                     "~/Views/Admin/Partials/Configuration/ShiftDefinition/_CreateShiftDefinition.cshtml",
                     model);
             }
 
+            model.WorkspaceId = wsId.Value;
             _context.ShiftDefinition.Add(model);
             await _context.SaveChangesAsync();
 

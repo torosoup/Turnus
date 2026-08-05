@@ -13,6 +13,12 @@ namespace Turnus.Models
         [ForeignKey("DepartmentId")]
         public Department? Department { get; set; }
 
+        // Workspace tenancy
+        public int? WorkspaceId { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("WorkspaceId")]
+        public Workspace? Workspace { get; set; }
+
         [Required]
         [StringLength(40)]
         public string Name { get; set; } = string.Empty;

@@ -30,9 +30,21 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav">
+                        @inject Microsoft.AspNetCore.Authorization.IAuthorizationService AuthorizationService
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            @if (User.IsInRole("Manager"))
+                            var showAdmin = false;
+                            if (User.IsInRole("Manager") || User.IsInRole("SuperAdmin"))
+                            {
+                                showAdmin = true;
+                            }
+                            else
+                            {
+                                var auth = await AuthorizationService.AuthorizeAsync(User, null, "WorkspaceManager");
+                                if (auth.Succeeded) showAdmin = true;
+                            }
+
+                            if (showAdmin)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="Admin" asp-action="Dashboard">Admin</a>

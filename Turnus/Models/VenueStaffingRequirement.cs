@@ -25,5 +25,11 @@ namespace Turnus.Models
 
         [Display(Name = "Needed per shift (not per day)")]
         public bool IsShiftScoped { get; set; } = false; // change this later so needed per shift is default, and needed per day is optional
+
+        // Workspace tenancy
+        public int? WorkspaceId { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("WorkspaceId")]
+        public Workspace? Workspace { get; set; }
     }
 }

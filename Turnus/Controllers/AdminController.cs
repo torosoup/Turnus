@@ -5,14 +5,16 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class AdminController : Controller
     {
         private readonly TurnusContext _context;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public AdminController(TurnusContext context)
+        public AdminController(TurnusContext context, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
+            _workspaceProvider = workspaceProvider;
         }
 
         // ---------------------------
@@ -20,9 +22,14 @@ namespace Turnus.Controllers
         // ---------------------------
         public async Task<IActionResult> Dashboard(int? venueId, int? departmentId)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
+            // Venues are automatically filtered by the DbContext global query filters,
+            // but we load them explicitly to drive UI selection.
             var venues = await _context.Venue.ToListAsync();
 
-            // If there are no venues (fresh DB), return an empty dashboard model so the
+            // If there are no venues (fresh workspace), return an empty dashboard model so the
             // views and client-side scripts can render a friendly UI that lets the user
             // create the first venue.
             if (!venues.Any())
@@ -99,8 +106,17 @@ namespace Turnus.Controllers
 
         public async Task<IActionResult> UsersSection(int? venueId, int? departmentId)
         {
-            // Return list of users for the admin dashboard user management section
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
+            // Return list of users who are members of the current workspace
+            var userIds = await _context.WorkspaceMember
+                .Where(wm => wm.WorkspaceId == wsId.Value)
+                .Select(wm => wm.UserId)
+                .ToListAsync();
+
             var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
                 .Cast<ApplicationUser>()
                 .ToListAsync();
 
@@ -118,10 +134,19 @@ namespace Turnus.Controllers
         // ---------------------------
         private async Task<DashboardViewModel> BuildDashboardModel(int venueId, int? departmentId = null)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue)
+            {
+                return new DashboardViewModel();
+            }
+
             var venues = await _context.Venue.ToListAsync();
             var selectedVenue = venues.FirstOrDefault(v => v.Id == venueId);
 
             var rolesQuery = _context.Role.AsQueryable(); // :)
+
+            // Ensure roles are restricted to the workspace (global filters apply, but defend in depth)
+            rolesQuery = rolesQuery.Where(r => r.WorkspaceId == wsId.Value);
 
             if (departmentId.HasValue)
             {

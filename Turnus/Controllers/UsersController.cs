@@ -6,25 +6,34 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class UsersController : Controller
     {
         private readonly TurnusContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
 
-        public UsersController(TurnusContext context, UserManager<ApplicationUser> userManager)
+        public UsersController(TurnusContext context, UserManager<ApplicationUser> userManager, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
             _userManager = userManager;
+            _workspaceProvider = workspaceProvider;
         }
 
         // GET: Users/Manage?id={id}
         public async Task<IActionResult> Manage(string id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            ViewBag.Roles = await _context.Role.ToListAsync();
+            // Ensure the target user is a member of this workspace
+            var member = await _context.WorkspaceMember.FindAsync(wsId.Value, user.Id);
+            if (member == null) return NotFound();
+
+            ViewBag.Roles = await _context.Role.Where(r => r.WorkspaceId == wsId.Value).ToListAsync();
             ViewBag.UserRoles = (await _userManager.GetRolesAsync(user)).ToList();
 
             return PartialView("~/Views/Admin/Partials/UserManagement/_ManageUser.cshtml", user);
@@ -65,15 +74,22 @@ namespace Turnus.Controllers
         // GET: Users/Details?id={id}
         public async Task<IActionResult> Details(string id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            // Ensure the target user is a member of this workspace
+            var member = await _context.WorkspaceMember.FindAsync(wsId.Value, user.Id);
+            if (member == null) return NotFound();
 
             var roles = await _userManager.GetRolesAsync(user);
             ViewBag.Roles = roles;
 
             var assignments = await _context.ShiftAssignment
                 .Include(a => a.ScheduledShift).ThenInclude(s => s.ShiftDefinition)
-                .Where(a => a.EmployeeId == id)
+                .Where(a => a.EmployeeId == id && a.WorkspaceId == wsId.Value)
                 .OrderByDescending(a => a.ScheduledShift.Date)
                 .ToListAsync();
 
@@ -85,8 +101,14 @@ namespace Turnus.Controllers
         // GET: Users/Delete?id={id}
         public async Task<IActionResult> Delete(string id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            var member = await _context.WorkspaceMember.FindAsync(wsId.Value, user.Id);
+            if (member == null) return NotFound();
 
             return PartialView("~/Views/Admin/Partials/UserManagement/_DeleteUser.cshtml", user);
         }
@@ -95,20 +117,30 @@ namespace Turnus.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
+                var member = await _context.WorkspaceMember.FindAsync(wsId.Value, user.Id);
+                if (member == null) return NotFound();
+
                 var currentUserId = _userManager.GetUserId(User);
 
                 // Prevent deleting yourself
                 if (currentUserId == user.Id) return Forbid();
 
-                // Prevent deleting other manager accounts via this UI
-                if (await _userManager.IsInRoleAsync(user, "Manager")) return Forbid();
+                // Prevent deleting other owner accounts via this UI
+                if (member.Role == WorkspaceRole.Owner) return Forbid();
 
-                await _userManager.DeleteAsync(user);
+                // Remove workspace membership and optionally delete user if desired
+                _context.WorkspaceMember.Remove(member);
+
+                // If you want to delete the user globally, ensure only SuperAdmin can do that.
             }
 
+            await _context.SaveChangesAsync();
             return RedirectToAction("Dashboard", "Admin");
         }
     }

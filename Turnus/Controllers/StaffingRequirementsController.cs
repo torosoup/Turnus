@@ -5,20 +5,26 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "WorkspaceManager")]
     public class StaffingRequirementsController : Controller
     {
         private readonly TurnusContext _context;
 
-        public StaffingRequirementsController(TurnusContext context)
+        private readonly Turnus.Services.ICurrentWorkspaceProvider _workspaceProvider;
+
+        public StaffingRequirementsController(TurnusContext context, Turnus.Services.ICurrentWorkspaceProvider workspaceProvider)
         {
             _context = context;
+            _workspaceProvider = workspaceProvider;
         }
 
         public async Task<IActionResult> Create(int departmentId)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             ViewBag.Roles = await _context.Role
-                .Where(r => r.DepartmentId == departmentId)
+                .Where(r => r.DepartmentId == departmentId && r.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
             return PartialView("~/Views/Admin/Partials/Configuration/StaffingRequirement/_CreateStaffingRequirement.cshtml",
@@ -29,18 +35,20 @@ namespace Turnus.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(VenueStaffingRequirement model)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var role = await _context.Role.FindAsync(model.RoleId);
 
-            if (role == null || role.DepartmentId != model.DepartmentId)
+            if (role == null || role.DepartmentId != model.DepartmentId || role.WorkspaceId != wsId.Value)
             {
-                ModelState.AddModelError("RoleId",
-                    "Selected role does not belong to this department.");
+                ModelState.AddModelError("RoleId", "Selected role does not belong to this department or workspace.");
             }
 
             if (!ModelState.IsValid)
             {
                 ViewBag.Roles = await _context.Role
-                    .Where(r => r.DepartmentId == model.DepartmentId)
+                    .Where(r => r.DepartmentId == model.DepartmentId && r.WorkspaceId == wsId.Value)
                     .ToListAsync();
 
                 return PartialView(
@@ -48,6 +56,7 @@ namespace Turnus.Controllers
                     model);
             }
 
+            model.WorkspaceId = wsId.Value;
             _context.VenueStaffingRequirement.Add(model);
             await _context.SaveChangesAsync();
 
@@ -57,50 +66,63 @@ namespace Turnus.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var req = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
-                .FirstOrDefaultAsync(r => r.Id == id);
+                .FirstOrDefaultAsync(r => r.Id == id && r.WorkspaceId == wsId.Value);
 
-            ViewBag.Roles = await _context.Role.ToListAsync();
+            if (req == null) return NotFound();
+
+            ViewBag.Roles = await _context.Role.Where(r => r.WorkspaceId == wsId.Value).ToListAsync();
 
             return PartialView("~/Views/Admin/Partials/Configuration/StaffingRequirement/_EditStaffingRequirement.cshtml", req);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-public async Task<IActionResult> Edit(VenueStaffingRequirement model)
-{
-    var role = await _context.Role.FindAsync(model.RoleId);
+        public async Task<IActionResult> Edit(VenueStaffingRequirement model)
+        {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
 
-    if (role == null || role.DepartmentId != model.DepartmentId)
-    {
-        ModelState.AddModelError("RoleId",
-            "Selected role does not belong to this department.");
-    }
+            var role = await _context.Role.FindAsync(model.RoleId);
 
-    if (!ModelState.IsValid)
-    {
-        ViewBag.Roles = await _context.Role
-            .Where(r => r.DepartmentId == model.DepartmentId)
-            .ToListAsync();
+            if (role == null || role.DepartmentId != model.DepartmentId || role.WorkspaceId != wsId.Value)
+            {
+                ModelState.AddModelError("RoleId", "Selected role does not belong to this department or workspace.");
+            }
 
-        return PartialView(
-            "~/Views/Admin/Partials/Configuration/StaffingRequirement/_EditStaffingRequirement.cshtml",
-            model);
-    }
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Roles = await _context.Role
+                    .Where(r => r.DepartmentId == model.DepartmentId && r.WorkspaceId == wsId.Value)
+                    .ToListAsync();
 
-    _context.Update(model);
-    await _context.SaveChangesAsync();
+                return PartialView(
+                    "~/Views/Admin/Partials/Configuration/StaffingRequirement/_EditStaffingRequirement.cshtml",
+                    model);
+            }
 
-    var dept = await _context.Department.FindAsync(model.DepartmentId);
-    return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = model.DepartmentId });
-}
+            model.WorkspaceId = wsId.Value;
+            _context.Update(model);
+            await _context.SaveChangesAsync();
+
+            var dept = await _context.Department.FindAsync(model.DepartmentId);
+            return RedirectToAction("Dashboard", "Admin", new { venueId = dept?.VenueId, departmentId = model.DepartmentId });
+        }
 
         public async Task<IActionResult> Delete(int id)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var req = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
-                .FirstOrDefaultAsync(r => r.Id == id);
+                .FirstOrDefaultAsync(r => r.Id == id && r.WorkspaceId == wsId.Value);
+
+            if (req == null) return NotFound();
 
             return PartialView("~/Views/Admin/Partials/Configuration/StaffingRequirement/_DeleteStaffingRequirement.cshtml", req);
         }
@@ -109,8 +131,11 @@ public async Task<IActionResult> Edit(VenueStaffingRequirement model)
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(VenueStaffingRequirement model)
         {
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var req = await _context.VenueStaffingRequirement.FindAsync(model.Id);
-            if (req == null) return NotFound();
+            if (req == null || req.WorkspaceId != wsId.Value) return NotFound();
 
             _context.VenueStaffingRequirement.Remove(req);
             await _context.SaveChangesAsync();
