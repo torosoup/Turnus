@@ -127,7 +127,16 @@ using (var scope = app.Services.CreateScope())
         var exists = await db.WorkspaceMember.FindAsync(defaultWorkspace.Id, u.Id);
         if (exists == null)
         {
+            /*
             var memberRole = WorkspaceRole.Member;
+            if (!string.IsNullOrEmpty(managerEmail) && u.Email == managerEmail)
+            {
+                memberRole = WorkspaceRole.Owner;
+            }
+            */
+
+            // Make the configured manager email the explicit Owner; others become Admin
+            var memberRole = WorkspaceRole.Admin;
             if (!string.IsNullOrEmpty(managerEmail) && u.Email == managerEmail)
             {
                 memberRole = WorkspaceRole.Owner;
