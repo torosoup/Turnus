@@ -5,16 +5,19 @@ on:
   push:
     branches: 
     - main
+env:
+  AZURE_WEBAPP_NAME: Turnus20260730021231
+  AZURE_WEBAPP_PACKAGE_PATH: "./publish"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
 
@@ -25,6 +28,13 @@ jobs:
       run: dotnet build ./Turnus.slnx --configuration Release --no-restore
 
     - name: Publish
-      run: dotnet publish ./Turnus.slnx --configuration Release --no-build
+      run: dotnet publish ./Turnus.slnx --configuration Release --no-build --output '${{env.AZURE_WEBAPP_PACKAGE_PATH}}'
+
+    - name: Deployment
+      uses: actions/webapps-deploy/v@3
+      with:
+        app-name: ${{env.AZURE_WEBAPP_NAME}}
+        publish-profile: ${{secrets.AZURE_PUBLISH_PROFILE}}
+        package: ${{env.AZURE_WEBAPP_PACKAGE_PATH}}
     
     
