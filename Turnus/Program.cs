@@ -76,83 +76,10 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(superUser, "SuperAdmin");
         }
     }
-
-    // Create a default workspace if none exists and backfill existing data to that workspace
-    var defaultWorkspaceName = builder.Configuration["Seeding:DefaultWorkspaceName"] ?? "Default Workspace";
-    var defaultWorkspace = await db.Set<Workspace>().FirstOrDefaultAsync();
-    if (defaultWorkspace == null)
-    {
-        defaultWorkspace = new Workspace
-        {
-            Name = defaultWorkspaceName,
-            CreatedAt = DateTime.UtcNow,
-            CreatedByUserId = managerEmail
-        };
-        db.Set<Workspace>().Add(defaultWorkspace);
-        await db.SaveChangesAsync();
-    }
-
-    // Backfill nullable WorkspaceId columns for existing records to the default workspace
-    // Venues
-    var venuesToUpdate = await db.Venue.Where(v => v.WorkspaceId == null).ToListAsync();
-    foreach (var v in venuesToUpdate) v.WorkspaceId = defaultWorkspace.Id;
-    // Departments
-    var deptsToUpdate = await db.Department.Where(d => d.WorkspaceId == null).ToListAsync();
-    foreach (var d in deptsToUpdate) d.WorkspaceId = defaultWorkspace.Id;
-    // Roles
-    var rolesToUpdate = await db.Role.Where(r => r.WorkspaceId == null).ToListAsync();
-    foreach (var r in rolesToUpdate) r.WorkspaceId = defaultWorkspace.Id;
-    // ShiftDefinitions
-    var sdefsToUpdate = await db.ShiftDefinition.Where(s => s.WorkspaceId == null).ToListAsync();
-    foreach (var s in sdefsToUpdate) s.WorkspaceId = defaultWorkspace.Id;
-    // ScheduledShifts
-    var schedsToUpdate = await db.ScheduledShift.Where(s => s.WorkspaceId == null).ToListAsync();
-    foreach (var s in schedsToUpdate) s.WorkspaceId = defaultWorkspace.Id;
-    // VenueStaffingRequirement
-    var reqsToUpdate = await db.VenueStaffingRequirement.Where(r => r.WorkspaceId == null).ToListAsync();
-    foreach (var r in reqsToUpdate) r.WorkspaceId = defaultWorkspace.Id;
-    // ShiftAssignments
-    var assignsToUpdate = await db.ShiftAssignment.Where(a => a.WorkspaceId == null).ToListAsync();
-    foreach (var a in assignsToUpdate) a.WorkspaceId = defaultWorkspace.Id;
-    // Availability
-    var availsToUpdate = await db.Availability.Where(a => a.WorkspaceId == null).ToListAsync();
-    foreach (var a in availsToUpdate) a.WorkspaceId = defaultWorkspace.Id;
-
-    await db.SaveChangesAsync();
-
-    // Seed WorkspaceMember entries for existing users: make the configured manager the Owner
-    var users = userManager.Users.ToList();
-    foreach (var u in users)
-    {
-        var exists = await db.WorkspaceMember.FindAsync(defaultWorkspace.Id, u.Id);
-        if (exists == null)
-        {
-            /*
-            var memberRole = WorkspaceRole.Member;
-            if (!string.IsNullOrEmpty(managerEmail) && u.Email == managerEmail)
-            {
-                memberRole = WorkspaceRole.Owner;
-            }
-            */
-
-            // Make the configured manager email the explicit Owner; others become Admin
-            var memberRole = WorkspaceRole.Admin;
-            if (!string.IsNullOrEmpty(managerEmail) && u.Email == managerEmail)
-            {
-                memberRole = WorkspaceRole.Owner;
-            }
-
-            db.WorkspaceMember.Add(new WorkspaceMember
-            {
-                WorkspaceId = defaultWorkspace.Id,
-                UserId = u.Id,
-                Role = memberRole,
-                JoinedAt = DateTime.UtcNow
-            });
-        }
-    }
-
-    await db.SaveChangesAsync();
+    // Tenant onboarding is now user-driven. We no longer create a default workspace
+    // or backfill existing entities into a default workspace at startup. This
+    // prevents automatically assigning every user to a single workspace.
+    Console.WriteLine("Workspace auto-seeding/backfill is disabled. Workspaces must be created or joined by users.");
 }
 
 // Configure the HTTP request pipeline.

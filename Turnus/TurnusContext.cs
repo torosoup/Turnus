@@ -52,14 +52,16 @@ public class TurnusContext(DbContextOptions<TurnusContext> options) : IdentityDb
 
         // Global query filters to enforce workspace isolation. These filter expressions
         // reference the instance property CurrentWorkspaceId which is set at request time.
-        modelBuilder.Entity<Venue>().HasQueryFilter(v => !CurrentWorkspaceId.HasValue || v.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<Department>().HasQueryFilter(d => !CurrentWorkspaceId.HasValue || d.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<Role>().HasQueryFilter(r => !CurrentWorkspaceId.HasValue || r.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<ShiftDefinition>().HasQueryFilter(s => !CurrentWorkspaceId.HasValue || s.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<ScheduledShift>().HasQueryFilter(s => !CurrentWorkspaceId.HasValue || s.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<VenueStaffingRequirement>().HasQueryFilter(r => !CurrentWorkspaceId.HasValue || r.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<ShiftAssignment>().HasQueryFilter(a => !CurrentWorkspaceId.HasValue || a.WorkspaceId == CurrentWorkspaceId);
-        modelBuilder.Entity<Availability>().HasQueryFilter(a => !CurrentWorkspaceId.HasValue || a.WorkspaceId == CurrentWorkspaceId);
+        // Require a current workspace to be set so that no workspace-owned data is returned
+        // when the request has no active workspace. This enforces explicit selection/join.
+        modelBuilder.Entity<Venue>().HasQueryFilter(v => CurrentWorkspaceId.HasValue && v.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<Department>().HasQueryFilter(d => CurrentWorkspaceId.HasValue && d.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<Role>().HasQueryFilter(r => CurrentWorkspaceId.HasValue && r.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<ShiftDefinition>().HasQueryFilter(s => CurrentWorkspaceId.HasValue && s.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<ScheduledShift>().HasQueryFilter(s => CurrentWorkspaceId.HasValue && s.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<VenueStaffingRequirement>().HasQueryFilter(r => CurrentWorkspaceId.HasValue && r.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<ShiftAssignment>().HasQueryFilter(a => CurrentWorkspaceId.HasValue && a.WorkspaceId == CurrentWorkspaceId);
+        modelBuilder.Entity<Availability>().HasQueryFilter(a => CurrentWorkspaceId.HasValue && a.WorkspaceId == CurrentWorkspaceId);
 
         // Workspace relationships: prevent accidental cascade across workspaces
         modelBuilder.Entity<Venue>()
