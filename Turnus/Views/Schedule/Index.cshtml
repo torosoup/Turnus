@@ -13,7 +13,14 @@
         <div class="d-flex align-items-center gap-3">
             @if (Model.CanGoPrevious)
             {
-                <a asp-action="Index" asp-route-week="@Model.PreviousWeek" asp-route-venueId="@Model.SelectedVenueId" asp-route-departmentId="@Model.SelectedDepartmentId" class="btn btn-outline-secondary btn-sm">&#8592;</a>
+                if (Model.SelectedDepartmentId.HasValue)
+                {
+                    <a asp-action="Index" asp-route-week="@Model.PreviousWeek" asp-route-venueId="@Model.SelectedVenueId" asp-route-departmentId="@Model.SelectedDepartmentId" class="btn btn-outline-secondary btn-sm">&#8592;</a>
+                }
+                else
+                {
+                    <a asp-action="Index" asp-route-week="@Model.PreviousWeek" asp-route-venueId="@Model.SelectedVenueId" class="btn btn-outline-secondary btn-sm">&#8592;</a>
+                }
             }
             else
             {
@@ -24,7 +31,14 @@
 
             @if (Model.CanGoNext)
             {
-                <a asp-action="Index" asp-route-week="@Model.NextWeek" asp-route-venueId="@Model.SelectedVenueId" asp-route-departmentId="@Model.SelectedDepartmentId" class="btn btn-outline-secondary btn-sm">&#8594;</a>
+                if (Model.SelectedDepartmentId.HasValue)
+                {
+                    <a asp-action="Index" asp-route-week="@Model.NextWeek" asp-route-venueId="@Model.SelectedVenueId" asp-route-departmentId="@Model.SelectedDepartmentId" class="btn btn-outline-secondary btn-sm">&#8594;</a>
+                }
+                else
+                {
+                    <a asp-action="Index" asp-route-week="@Model.NextWeek" asp-route-venueId="@Model.SelectedVenueId" class="btn btn-outline-secondary btn-sm">&#8594;</a>
+                }
             }
             else
             {
@@ -49,10 +63,10 @@
                     @if (Model.Departments != null && Model.Departments.Any())
                     {
                         <select name="departmentId" class="form-select form-select-sm d-inline ms-2" style="width:auto;" onchange="this.form.submit()">
-                            <option value="" selected="@(Model.SelectedDepartmentId == 0)">All departments</option>
+                            <option value="" selected="@(!Model.SelectedDepartmentId.HasValue)">All departments</option>
                             @foreach (var d in Model.Departments)
                             {
-                                <option value="@d.Id" selected="@(d.Id == Model.SelectedDepartmentId)">@d.Name</option>
+                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId.HasValue && d.Id == Model.SelectedDepartmentId.Value)">@d.Name</option>
                             }
                         </select>
                     }
@@ -69,10 +83,10 @@
                         <input type="hidden" name="week" value="@Model.CurrentWeek" />
                         <input type="hidden" name="venueId" value="@Model.SelectedVenueId" />
                         <select name="departmentId" class="form-select form-select-sm d-inline" style="width:auto;" onchange="this.form.submit()">
-                            <option value="" selected="@(Model.SelectedDepartmentId == 0)">All departments</option>
+                            <option value="" selected="@(!Model.SelectedDepartmentId.HasValue)">All departments</option>
                             @foreach (var d in Model.Departments)
                             {
-                                <option value="@d.Id" selected="@(d.Id == Model.SelectedDepartmentId)">@d.Name</option>
+                                <option value="@d.Id" selected="@(Model.SelectedDepartmentId.HasValue && d.Id == Model.SelectedDepartmentId.Value)">@d.Name</option>
                             }
                         </select>
                     </form>

@@ -64,10 +64,13 @@ namespace Turnus.Controllers
                 .Include(s => s.ShiftAssignments)
                     .ThenInclude(a => a.Role)
                 .Where(s => s.Date.Date >= weekStart.Date &&
-                            s.Date.Date <= weekEnd.Date);
+                            s.Date.Date <= weekEnd.Date &&
+                            s.WorkspaceId == wsId.Value);
 
             // Load venues early so we can default to the first venue when none specified
-            var venues = await _context.Venue.ToListAsync();
+            var venues = await _context.Venue
+                .Where(v => v.WorkspaceId == wsId.Value)
+                .ToListAsync();
 
             if (!venueId.HasValue && venues.Any())
             {
@@ -96,7 +99,7 @@ namespace Turnus.Controllers
 
             var requirements = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
-                .Where(r => departmentIds.Contains(r.DepartmentId))
+                .Where(r => departmentIds.Contains(r.DepartmentId) && r.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
             // Load departments for the selected venue for the department filter
@@ -104,7 +107,7 @@ namespace Turnus.Controllers
             if (venueId.HasValue)
             {
                 departmentsForVenue = await _context.Department
-                    .Where(d => d.VenueId == venueId.Value)
+                    .Where(d => d.VenueId == venueId.Value && d.WorkspaceId == wsId.Value)
                     .ToListAsync();
             }
 
@@ -120,7 +123,7 @@ namespace Turnus.Controllers
                 Venues = venues,
                 Departments = departmentsForVenue,
                 SelectedVenueId = venueId ?? 0,
-                SelectedDepartmentId = departmentId ?? 0,
+                SelectedDepartmentId = departmentId,
                 CanGoPrevious = weekStart > minWeekStart,
                 CanGoNext = weekStart < maxWeekStart,
                 PreviousWeek = FormatWeek(weekStart.AddDays(-7)),
@@ -135,6 +138,9 @@ namespace Turnus.Controllers
         {
             var currentUserId = _userManager.GetUserId(User);
 
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
+
             var shift = await _context.ScheduledShift
                 .Include(s => s.Venue)
                 .Include(s => s.Department)
@@ -143,7 +149,7 @@ namespace Turnus.Controllers
                     .ThenInclude(a => a.Employee)
                 .Include(s => s.ShiftAssignments)
                     .ThenInclude(a => a.Role)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id && s.WorkspaceId == wsId.Value);
 
             if (shift == null)
                 return NotFound();
@@ -156,7 +162,8 @@ namespace Turnus.Controllers
             var requirements = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
                 .Where(r => shift.DepartmentId != null &&
-                            r.DepartmentId == shift.DepartmentId)
+                            r.DepartmentId == shift.DepartmentId &&
+                            r.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
             // Console.WriteLine($"Requirements found: {requirements.Count}");
@@ -164,7 +171,8 @@ namespace Turnus.Controllers
             var myAvailability = await _context.Availability
                 .FirstOrDefaultAsync(a =>
                     a.EmployeeId == currentUserId &&
-                    a.ScheduledShiftId == id);
+                    a.ScheduledShiftId == id &&
+                    a.WorkspaceId == wsId.Value);
 
             ViewBag.Requirements = requirements;
             ViewBag.MyAvailability = myAvailability;
@@ -187,7 +195,7 @@ namespace Turnus.Controllers
             public List<Venue> Venues { get; set; } = new();
             public List<Department> Departments { get; set; } = new();
             public int SelectedVenueId { get; set; }
-            public int SelectedDepartmentId { get; set; }
+            public int? SelectedDepartmentId { get; set; }
             public bool CanGoPrevious { get; set; }
             public bool CanGoNext { get; set; }
             public string PreviousWeek { get; set; } = string.Empty;

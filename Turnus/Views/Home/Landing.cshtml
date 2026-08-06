@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Turnus";
+}
+
+<h1>Turnus</h1>
+<p>Shift scheduling, time tracking, and staff management platform built with ASP.NET Core MVC.</p>
+
+<div>
+    <h3>Get Started</h3>
+    <form method="get" action="/Home/Index">
+        <div class="mb-3">
+            <label for="workspaceName" class="form-label">Workspace Name</label>
+            <input id="workspaceName" name="workspaceName" placeholder="Workspace Name" class="form-control" />
+        </div>
+        <button type="submit" name="actionAfterLogin" value="join" class="btn btn-primary">Join Workspace</button>
+        <button type="submit" name="actionAfterLogin" value="create" class="btn btn-success">Create Workspace</button>
+    </form>
+</div>

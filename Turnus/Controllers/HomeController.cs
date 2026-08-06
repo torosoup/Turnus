@@ -21,7 +21,7 @@ namespace Turnus.Controllers
             _workspaceProvider = workspaceProvider;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? actionAfterLogin, string? workspaceName)
         {
             var today = DateTime.Today;
 
@@ -31,11 +31,103 @@ namespace Turnus.Controllers
             // Upcoming general shifts (next upcomingDays)
             var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
 
-            // If no workspace is active, fall back to the first (default) workspace if present.
+            // If no workspace is active, we treat the request as landing page / onboarding.
             if (!wsId.HasValue)
             {
-                var firstWs = await _context.Workspace.FirstOrDefaultAsync();
-                wsId = firstWs?.Id;
+                // If an actionAfterLogin was requested and the user is not authenticated, redirect to login
+                if (!string.IsNullOrEmpty(actionAfterLogin) && !User.Identity?.IsAuthenticated == true)
+                {
+                    var returnUrl = Url.Action("Index", "Home", new { actionAfterLogin = actionAfterLogin, workspaceName = workspaceName });
+                    return Redirect($"/Identity/Account/Login?returnUrl={System.Net.WebUtility.UrlEncode(returnUrl)}");
+                }
+
+                // If the user is authenticated and requested an action, perform it
+                if (!string.IsNullOrEmpty(actionAfterLogin) && User.Identity?.IsAuthenticated == true)
+                {
+                    var userId = _userManager.GetUserId(User)!;
+
+                    if (actionAfterLogin == "create" && !string.IsNullOrEmpty(workspaceName))
+                    {
+                        // Trim and validate workspace name
+                        var name = workspaceName.Trim();
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            ModelState.AddModelError("", "Workspace name is required.");
+                            return View("Landing");
+                        }
+                        if (name.Length < 2 || name.Length > 100)
+                        {
+                            ModelState.AddModelError("", "Workspace name must be between 2 and 100 characters.");
+                            return View("Landing");
+                        }
+                        var allowed = System.Text.RegularExpressions.Regex.IsMatch(name, "^[A-Za-z0-9 _-]+$");
+                        if (!allowed)
+                        {
+                            ModelState.AddModelError("", "Workspace name contains invalid characters.");
+                            return View("Landing");
+                        }
+
+                        // Check if a workspace with this name exists
+                        var exists = await _context.Workspace.FirstOrDefaultAsync(w => w.Name == name);
+                        if (exists != null)
+                        {
+                            ModelState.AddModelError("", "Workspace name already exists.");
+                            return View("Landing");
+                        }
+
+                        var ws = new Workspace { Name = name, CreatedAt = DateTime.UtcNow, CreatedByUserId = userId };
+                        _context.Workspace.Add(ws);
+                        await _context.SaveChangesAsync();
+
+                        // Add membership as Owner
+                        _context.WorkspaceMember.Add(new WorkspaceMember { WorkspaceId = ws.Id, UserId = userId, Role = WorkspaceRole.Owner, JoinedAt = DateTime.UtcNow });
+                        await _context.SaveChangesAsync();
+
+                        // Set workspace cookie so provider and middleware pick it up
+                        var cookieOptions = new Microsoft.AspNetCore.Http.CookieOptions { HttpOnly = true, SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax };
+                        if (Request.IsHttps) cookieOptions.Secure = true;
+                        Response.Cookies.Append("workspace", ws.Id.ToString(), cookieOptions);
+
+                        return RedirectToAction("Dashboard", "Admin");
+                    }
+
+                    if (actionAfterLogin == "join" && !string.IsNullOrEmpty(workspaceName))
+                    {
+                        var name = workspaceName.Trim();
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            ModelState.AddModelError("", "Workspace name is required.");
+                            return View("Landing");
+                        }
+
+                        var ws = await _context.Workspace.FirstOrDefaultAsync(w => w.Name == name);
+                        if (ws == null)
+                        {
+                            ModelState.AddModelError("", "Workspace not found.");
+                            return View("Landing");
+                        }
+
+                        // Add membership as Member if not exists
+                        var member = await _context.WorkspaceMember.FindAsync(ws.Id, _userManager.GetUserId(User));
+                        if (member == null)
+                        {
+                            _context.WorkspaceMember.Add(new WorkspaceMember { WorkspaceId = ws.Id, UserId = userId, Role = WorkspaceRole.Member, JoinedAt = DateTime.UtcNow });
+                            await _context.SaveChangesAsync();
+                        }
+
+                        var cookieOptions = new Microsoft.AspNetCore.Http.CookieOptions { HttpOnly = true, SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax };
+                        if (Request.IsHttps) cookieOptions.Secure = true;
+                        Response.Cookies.Append("workspace", ws.Id.ToString(), cookieOptions);
+
+                        return RedirectToAction("Index", "Schedule");
+                    }
+
+                    // Unknown action, show landing
+                    return View("Landing");
+                }
+
+                // No active workspace and no action => show landing
+                return View("Landing");
             }
 
             var upcomingQuery = _context.ScheduledShift

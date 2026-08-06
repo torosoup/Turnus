@@ -31,34 +31,33 @@ namespace Turnus.Services
             var userId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return null;
 
-            // 1) Check for an explicit claim indicating the active workspace
+            // 1) Check for explicit workspace claim
             var claim = ctx.User.FindFirst("workspace");
-            if (claim != null && int.TryParse(claim.Value, out var wsId))
+            if (claim != null && int.TryParse(claim.Value, out var wsIdFromClaim))
             {
-                // verify membership
-                var member = await _db.WorkspaceMember.FindAsync(wsId, userId);
+                var member = await _db.WorkspaceMember.FindAsync(wsIdFromClaim, userId);
                 if (member != null)
                 {
-                    _cachedWorkspaceId = wsId;
+                    _cachedWorkspaceId = wsIdFromClaim;
                     _cachedMember = member;
                     return _cachedWorkspaceId;
                 }
             }
 
-            // 2) Fallback: return the first workspace the user is a member of
-            var firstMember = await _db.WorkspaceMember
-                .AsNoTracking()
-                .Where(wm => wm.UserId == userId)
-                .OrderBy(wm => wm.JoinedAt)
-                .FirstOrDefaultAsync();
-
-            if (firstMember != null)
+            // 2) Check for workspace cookie
+            var cookieVal = ctx.Request.Cookies["workspace"];
+            if (!string.IsNullOrEmpty(cookieVal) && int.TryParse(cookieVal, out var wsIdFromCookie))
             {
-                _cachedWorkspaceId = firstMember.WorkspaceId;
-                _cachedMember = firstMember;
-                return _cachedWorkspaceId;
+                var member = await _db.WorkspaceMember.FindAsync(wsIdFromCookie, userId);
+                if (member != null)
+                {
+                    _cachedWorkspaceId = wsIdFromCookie;
+                    _cachedMember = member;
+                    return _cachedWorkspaceId;
+                }
             }
 
+            // No implicit fallback - user must explicitly join or select a workspace
             return null;
         }
 

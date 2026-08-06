@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Turnus.Models;
+using Microsoft.Data.SqlClient;
 using Turnus.Services;
 
 namespace Turnus.Controllers
@@ -109,7 +110,7 @@ namespace Turnus.Controllers
                 if (!string.IsNullOrEmpty(model.EmployeeId))
                 {
                     var alreadyForThisShift = await _context.ShiftAssignment
-                        .AnyAsync(a => a.ScheduledShiftId == model.ScheduledShiftId && a.EmployeeId == model.EmployeeId);
+                        .AnyAsync(a => a.ScheduledShiftId == model.ScheduledShiftId && a.EmployeeId == model.EmployeeId && a.WorkspaceId == currentWorkspaceId.Value);
 
                     if (alreadyForThisShift)
                     {
@@ -188,8 +189,25 @@ namespace Turnus.Controllers
                     }
                 }
 
+                // Ensure the assignment is marked with the current workspace
+                model.WorkspaceId = currentWorkspaceId.Value;
+
                 _context.ShiftAssignment.Add(model);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Handle SQL unique constraint violations (duplicate key) gracefully
+                    if (ex.InnerException is SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627))
+                    {
+                        ModelState.AddModelError("", "This assignment already exists or a conflicting assignment was created concurrently.");
+                        return await ReturnScheduleReview(venueId, date);
+                    }
+
+                    throw;
+                }
             }
 
             /* return RedirectToAction(
@@ -263,10 +281,11 @@ namespace Turnus.Controllers
 
         private async Task<IActionResult> ReturnScheduleReview(int venueId, DateTime date)
         {
-            var venue = await _context.Venue.FindAsync(venueId);
+            var wsId = await _workspaceProvider.GetWorkspaceIdAsync();
+            if (!wsId.HasValue) return Forbid();
 
-            if (venue == null)
-                return NotFound();
+            var venue = await _context.Venue.FindAsync(venueId);
+            if (venue == null || venue.WorkspaceId != wsId.Value) return NotFound();
 
             var shifts = await _context.ScheduledShift
                 .Include(s => s.Department)
@@ -275,14 +294,10 @@ namespace Turnus.Controllers
                     .ThenInclude(a => a.Employee)
                 .Include(s => s.ShiftAssignments)
                     .ThenInclude(a => a.Role)
-                .Where(s =>
-                    s.VenueId == venueId &&
-                    s.Date.Date == date.Date)
+                .Where(s => s.VenueId == venueId && s.Date.Date == date.Date && s.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
-            var shiftIds = shifts
-                .Select(s => s.Id)
-                .ToList();
+            var shiftIds = shifts.Select(s => s.Id).ToList();
 
             var departmentIds = shifts
                 .Where(s => s.DepartmentId.HasValue)
@@ -292,17 +307,21 @@ namespace Turnus.Controllers
 
             var requirements = await _context.VenueStaffingRequirement
                 .Include(r => r.Role)
-                .Where(r => departmentIds.Contains(r.DepartmentId))
+                .Where(r => departmentIds.Contains(r.DepartmentId) && r.WorkspaceId == wsId.Value)
                 .ToListAsync();
 
             var availability = await _context.Availability
-                .Where(a =>
-                    shiftIds.Contains(a.ScheduledShiftId) &&
-                    a.IsAvailable)
+                .Where(a => shiftIds.Contains(a.ScheduledShiftId) && a.IsAvailable && a.WorkspaceId == wsId.Value)
                 .Include(a => a.Employee)
                 .ToListAsync();
 
+            var userIds = await _context.WorkspaceMember
+                .Where(wm => wm.WorkspaceId == wsId.Value)
+                .Select(wm => wm.UserId)
+                .ToListAsync();
+
             var allEmployees = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
                 .Cast<ApplicationUser>()
                 .ToListAsync();
 
@@ -312,9 +331,7 @@ namespace Turnus.Controllers
             ViewBag.Availability = availability;
             ViewBag.AllEmployees = allEmployees;
 
-            return PartialView(
-                "~/Views/Schedule/Partial/_ScheduleReview.cshtml",
-                shifts);
+            return PartialView("~/Views/Schedule/Partial/_ScheduleReview.cshtml", shifts);
         }
     }
 }
