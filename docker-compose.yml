@@ -1,0 +1,26 @@
+services:
+  turnus:
+    container_name: turnus-mvc-app
+    image: ${DOCKER_REGISTRY-}turnus
+    build:
+      context: .
+      dockerfile: Turnus/Dockerfile
+    ports:
+    - "8080:8080"
+    environment:
+      - ConnectionStrings__TurnusContext=Server=turnusdb;Database=TurnusDB;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+    depends_on:
+      - turnusdb
+  turnusdb:
+    container_name: turnusdb
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - turnusdb-data:/var/opt/mssql
+  
+volumes:
+  turnusdb-data:
