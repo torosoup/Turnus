@@ -4,7 +4,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Roles</span>
         <button class="btn btn-sm btn-primary"
-                onclick="DashboardRoles.openCreateModal()">
+                onclick="DashboardRoles.openCreateModal(@(Model.SelectedVenue != null ? Model.SelectedVenue.Id.ToString() : "null"), @(Model.SelectedDepartment != null ? Model.SelectedDepartment.Id.ToString() : "null"))">
             Create role
         </button>
     </div>
