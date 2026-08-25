@@ -1,7 +1,13 @@
 ﻿window.DashboardRoles = (function () {
 
-    async function openCreateModal() {
-        const response = await fetch('/Roles/Create', {
+    async function openCreateModal(venueId, departmentId) {
+        let url = '/Roles/Create';
+        const qs = [];
+        if (venueId !== undefined && venueId !== null) qs.push(`venueId=${venueId}`);
+        if (departmentId !== undefined && departmentId !== null) qs.push(`departmentId=${departmentId}`);
+        if (qs.length) url += '?' + qs.join('&');
+
+        const response = await fetch(url, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
 
@@ -9,6 +15,7 @@
         Modal.renderGlobal(html);
 
         hookForm('#role-create-form');
+        // scope/venue/department fields are removed from the UI; setupScopeSelection will no-op if missing
         setupScopeSelection();
     }
 

@@ -41,7 +41,7 @@ namespace Turnus.Controllers
 
             if (venue == null) return NotFound();
 
-            return View(venue);
+            return PartialView("~/Views/Admin/Partials/Configuration/Venue/_CreateVenue.cshtml", venue);
         }
 
         public async Task<IActionResult> Create()
