@@ -34,8 +34,11 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHand
 
 var app = builder.Build();
 
-// Seed Manager role and assign to configured email
-using (var scope = app.Services.CreateScope())
+
+try
+{
+    // Seed Manager role and assign to configured email
+    using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
@@ -80,6 +83,11 @@ using (var scope = app.Services.CreateScope())
     // or backfill existing entities into a default workspace at startup. This
     // prevents automatically assigning every user to a single workspace.
     Console.WriteLine("Workspace auto-seeding/backfill is disabled. Workspaces must be created or joined by users.");
+}
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Database initialization failed: {ex.Message}");
 }
 
 // Configure the HTTP request pipeline.
