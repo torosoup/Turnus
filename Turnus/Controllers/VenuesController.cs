@@ -65,9 +65,13 @@ namespace Turnus.Controllers
                 venue.WorkspaceId = wsId.Value;
                 _context.Add(venue);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // After creating a venue, redirect to the admin dashboard and include the new venue id so
+                // the UI can pick up context and close any modal/partial correctly.
+                return RedirectToAction("Dashboard", "Admin", new { venueId = venue.Id });
             }
-            return View(venue);
+
+            // If model state is invalid, re-render the partial so the client can show validation errors.
+            return PartialView("~/Views/Admin/Partials/Configuration/Venue/_CreateVenue.cshtml", venue);
         }
 
         public async Task<IActionResult> Edit(int? id)
@@ -99,8 +103,13 @@ namespace Turnus.Controllers
             {
                 try
                 {
-                    venue.WorkspaceId = wsId.Value;
-                    _context.Update(venue);
+                    // Use the already-tracked entity to avoid duplicate tracking errors.
+                    // Copy the updatable properties from the incoming model to the tracked entity.
+                    existing.Name = venue.Name;
+                    // If CreatedAt should be preserved from existing, do not overwrite. If you allow editing CreatedAt,
+                    // uncomment the line below.
+                    // existing.CreatedAt = venue.CreatedAt;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -108,9 +117,12 @@ namespace Turnus.Controllers
                     if (!_context.Venue.Any(e => e.Id == id)) return NotFound();
                     else throw;
                 }
+
                 // Preserve venue context after editing
                 return RedirectToAction("Dashboard", "Admin", new { venueId = venue.Id });
             }
+
+            // If validation failed, re-render the edit partial so validation messages show inside the modal.
             return PartialView("~/Views/Admin/Partials/Configuration/Venue/_EditVenue.cshtml", venue);
         }
 
