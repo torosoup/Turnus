@@ -1,0 +1,302 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Comment CommentText="1..*">
+    <Position X="20.24" Y="1.666" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="*..1&#xD;&#xA;">
+    <Position X="12.625" Y="2.013" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Venue.WorkspaceId">
+    <Position X="12.609" Y="2.458" Height="0.313" Width="1.65" />
+  </Comment>
+  <Comment CommentText="*..0&#xD;&#xA;">
+    <Position X="12.632" Y="6.424" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Department.WorkspaceId">
+    <Position X="12.588" Y="6.079" Height="0.313" Width="1.957" />
+  </Comment>
+  <Comment CommentText="0..*">
+    <Position X="22.681" Y="8.243" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ShiftDefinition.WorkspaceId">
+    <Position X="20.803" Y="8.672" Height="0.313" Width="2.614" />
+  </Comment>
+  <Comment CommentText="FK: Availability.WorkspaceId">
+    <Position X="22.953" Y="3.348" Height="0.313" Width="2.379" />
+  </Comment>
+  <Comment CommentText="0..*">
+    <Position X="24.597" Y="2.918" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="*..0&#xD;&#xA;">
+    <Position X="12.6" Y="9.7" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ShiftAssignment.WorkspaceId">
+    <Position X="12.584" Y="10.145" Height="0.313" Width="2.488" />
+  </Comment>
+  <Comment CommentText="0..*">
+    <Position X="18.307" Y="12.049" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ScheduleShift.WorkspaceId">
+    <Position X="16.979" Y="12.479" Height="0.313" Width="2.063" />
+  </Comment>
+  <Comment CommentText="*..0&#xD;&#xA;">
+    <Position X="4.374" Y="1.933" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Role.WorkspaceId">
+    <Position X="4.359" Y="2.378" Height="0.313" Width="1.65" />
+  </Comment>
+  <Comment CommentText="*..0&#xD;&#xA;">
+    <Position X="7.08" Y="13.39" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: StaffingRequirement.WorkspaceId">
+    <Position X="7.064" Y="13.836" Height="0.313" Width="2.781" />
+  </Comment>
+  <Comment CommentText="1..*">
+    <Position X="11.855" Y="4.386" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Department.VenueId">
+    <Position X="11.84" Y="4.831" Height="0.313" Width="1.65" />
+  </Comment>
+  <Comment CommentText="1..*">
+    <Position X="19.831" Y="9.636" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ScheduleShift.VenueId">
+    <Position X="19.816" Y="10.082" Height="0.313" Width="1.65" />
+  </Comment>
+  <Comment CommentText="1..*">
+    <Position X="22.59" Y="6.5" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ShiftDefinition.Department">
+    <Position X="21.386" Y="6.929" Height="0.313" Width="1.955" />
+  </Comment>
+  <Comment CommentText="*..0">
+    <Position X="7.085" Y="5.512" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Role.DepartmentId">
+    <Position X="7.07" Y="5.957" Height="0.313" Width="1.65" />
+  </Comment>
+  <Comment CommentText="*..1&#xD;&#xA;">
+    <Position X="7.121" Y="11.311" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: StaffingRequirement:DepartmentId">
+    <Position X="7.106" Y="11.757" Height="0.313" Width="2.38" />
+  </Comment>
+  <Comment CommentText="*..0&#xD;&#xA;">
+    <Position X="20.892" Y="12.864" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ScheduledShift.ShiftDefinitionId">
+    <Position X="20.877" Y="13.31" Height="0.313" Width="2.488" />
+  </Comment>
+  <Comment CommentText="*..1&#xD;&#xA;">
+    <Position X="11.892" Y="10.944" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ShiftAssignment.ScheduledShiftId">
+    <Position X="11.876" Y="11.39" Height="0.313" Width="2.488" />
+  </Comment>
+  <Comment CommentText="1..*">
+    <Position X="24.64" Y="4.801" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Availability.ScheduledShiftId">
+    <Position X="22.996" Y="5.231" Height="0.313" Width="2.379" />
+  </Comment>
+  <Comment CommentText="*..1">
+    <Position X="4.474" Y="5.515" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ShiftAssignment.RoleId">
+    <Position X="2.83" Y="5.944" Height="0.313" Width="2.379" />
+  </Comment>
+  <Comment CommentText="Namespace&#xD;&#xA;Microsoft.AspNetCore.Identity;&#xD;&#xA;class IdentityUser">
+    <Position X="38.501" Y="0.5" Height="0.75" Width="3.314" />
+  </Comment>
+  <Comment CommentText="*..1">
+    <Position X="29.585" Y="3.789" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: ShiftAssignment.EmployeeId">
+    <Position X="27.942" Y="4.219" Height="0.313" Width="2.379" />
+  </Comment>
+  <Comment CommentText="*..1">
+    <Position X="28.857" Y="2.003" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Availability.EmployeeId">
+    <Position X="27.213" Y="2.432" Height="0.313" Width="2.379" />
+  </Comment>
+  <Comment CommentText="*..0">
+    <Position X="6.875" Y="2.121" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: Role.VenueId">
+    <Position X="6.86" Y="2.567" Height="0.313" Width="1.65" />
+  </Comment>
+  <Comment CommentText="1..*">
+    <Position X="5.374" Y="9.986" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: StaffingRequirement.RoleId">
+    <Position X="3.055" Y="10.416" Height="0.313" Width="3.054" />
+  </Comment>
+  <Comment CommentText="1..1">
+    <Position X="24.689" Y="0.92" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="1..1">
+    <Position X="30.681" Y="1.443" Height="0.313" Width="0.7" />
+  </Comment>
+  <Comment CommentText="FK: IdentityUser.ApplicationUser.VenueId">
+    <Position X="30.665" Y="1.889" Height="0.313" Width="3.478" />
+  </Comment>
+  <Comment CommentText="Namespace&#xD;&#xA;Turnus.models">
+    <Position X="0.5" Y="0.5" Height="0.75" Width="3.174" />
+  </Comment>
+  <Class Name="Turnus.Models.ApplicationUser">
+    <Position X="29.75" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ApplicationUser.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="WorkspaceRole" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.Availability">
+    <Position X="25.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAABAAAAQAAgCAAAACAIAAAAAAAAAAIACAAA=</HashCode>
+      <FileName>Models\Availability.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ApplicationUser" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.AvailableEmployeesViewModel" Collapsed="true">
+    <Position X="26" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAgAAAAAAABAAAIAAAABAAAAAAAAAgA=</HashCode>
+      <FileName>Models\AvailableEmployeesViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Turnus.Models.Department">
+    <Position X="11" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAIBAAAAAEAAAAAQAAgoAgAAAQAAAAAAIAEA=</HashCode>
+      <FileName>Models\Department.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ShiftDefinition" />
+      <Property Name="Role" />
+      <Property Name="VenueStaffingRequirement" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.ErrorViewModel" Collapsed="true">
+    <Position X="24.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ErrorViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Turnus.Models.Role">
+    <Position X="5.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAIBAgCAAAAAAAAQAEAoAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Models\Role.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="VenueStaffingRequirement" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.ScheduledShift">
+    <Position X="19.25" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAJBAgAABAAABAAAgEAoAgBABAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ScheduledShift.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ShiftAssignment" />
+      <Property Name="Availability" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.ScheduleReviewViewModel" Collapsed="true">
+    <Position X="10.25" Y="13.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAgAAAABAAAAAAIAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ScheduleReviewViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Turnus.Models.ShiftAssignment">
+    <Position X="11" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAIAAABAAAAQEAgCAAAACAIAAAAAAAAAAAACAAI=</HashCode>
+      <FileName>Models\ShiftAssignment.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Role1" />
+      <Property Name="ApplicationUser" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.ShiftDefinition">
+    <Position X="23.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAABAgAAAAAACAAQAMAIgAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ShiftDefinition.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ScheduledShift" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.Venue">
+    <Position X="11" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAABAAAAAECACAAQAEAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Venue.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Department" />
+      <Property Name="ScheduledShift" />
+      <Property Name="Role" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.VenueStaffingRequirement">
+    <Position X="5.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAACAAIAAABAgAAAEAAAAAAAEAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\VenueStaffingRequirement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Turnus.Models.Workspace">
+    <Position X="16" Y="0.5" Width="1.5" />
+    <AssociationLine Name="WorkspaceMember1" Type="Turnus.Models.WorkspaceMember">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.147" Y="0.121" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAIAAAAAAECADAAQgEAAAgAAAQAkEAIAAAAA=</HashCode>
+      <FileName>Models\Workspace.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="WorkspaceMember1" />
+      <Property Name="Venue" />
+      <Property Name="Department" />
+      <Property Name="ShiftDefinition" />
+      <Property Name="ScheduledShift" />
+      <Property Name="Availability" />
+      <Property Name="ShiftAssignment" />
+      <Property Name="VenueStaffingRequirement" />
+      <Property Name="Role" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Turnus.Models.WorkspaceMember">
+    <Position X="21" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAJAAAAAEAAAAQgAAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\WorkspaceMember.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="WorkspaceRole" />
+    </ShowAsAssociation>
+  </Class>
+  <Enum Name="Turnus.Models.WorkspaceRole" Collapsed="true">
+    <Position X="25.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAAAAAAAQAAAAAIBAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\WorkspaceMember.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
