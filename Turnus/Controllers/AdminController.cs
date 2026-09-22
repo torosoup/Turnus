@@ -5,7 +5,7 @@ using Turnus.Models;
 
 namespace Turnus.Controllers
 {
-    [Authorize(Policy = "WorkspaceManager")]
+    [Authorize(Policy = "WorkspaceManager")] //
     public class AdminController : Controller
     {
         private readonly TurnusContext _context;

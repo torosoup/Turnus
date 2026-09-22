@@ -147,22 +147,16 @@
   <Class Name="Turnus.Models.ApplicationUser">
     <Position X="29.75" Y="2.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAIAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\ApplicationUser.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="WorkspaceRole" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.Availability">
     <Position X="25.5" Y="2.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAABAAAAQAAgCAAAACAIAAAAAAAAAAIACAAA=</HashCode>
+      <HashCode>AAACAAAAAABAAAAAAAgCAAAACAIAAAAAAAAAAIACAAA=</HashCode>
       <FileName>Models\Availability.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="ApplicationUser" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.AvailableEmployeesViewModel" Collapsed="true">
     <Position X="26" Y="9.5" Width="1.5" />
@@ -174,14 +168,9 @@
   <Class Name="Turnus.Models.Department">
     <Position X="11" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAIBAAAAAEAAAAAQAAgoAgAAAQAAAAAAIAEA=</HashCode>
+      <HashCode>AAACAAAAAIBAAAAAAAAAAAQAAgoAAAAAAAAAAAAIAEA=</HashCode>
       <FileName>Models\Department.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="ShiftDefinition" />
-      <Property Name="Role" />
-      <Property Name="VenueStaffingRequirement" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.ErrorViewModel" Collapsed="true">
     <Position X="24.25" Y="12.75" Width="1.5" />
@@ -193,23 +182,16 @@
   <Class Name="Turnus.Models.Role">
     <Position X="5.5" Y="3" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAIBAgCAAAAAAAAQAEAoAAAAAQAAAAAAAAAA=</HashCode>
+      <HashCode>AAACAAAAAIBAgCAAAAAAAAQAEAoAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\Role.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="VenueStaffingRequirement" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.ScheduledShift">
     <Position X="19.25" Y="10.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAJBAgAABAAABAAAgEAoAgBABAAAAAAAAAAA=</HashCode>
+      <HashCode>AAACAAAAAJBAgAABAAAAAAAAEAoAgBABAAAAAAAAAAA=</HashCode>
       <FileName>Models\ScheduledShift.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="ShiftAssignment" />
-      <Property Name="Availability" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.ScheduleReviewViewModel" Collapsed="true">
     <Position X="10.25" Y="13.25" Width="1.5" />
@@ -221,35 +203,23 @@
   <Class Name="Turnus.Models.ShiftAssignment">
     <Position X="11" Y="8.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAIAAABAAAAQEAgCAAAACAIAAAAAAAAAAAACAAI=</HashCode>
+      <HashCode>AAACAAIAAABAAAAAEAgCAAAACAIAAAAAAAAAAAACAAA=</HashCode>
       <FileName>Models\ShiftAssignment.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="Role1" />
-      <Property Name="ApplicationUser" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.ShiftDefinition">
     <Position X="23.5" Y="6.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAABAgAAAAAACAAQAMAIgAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAACAAAAAABAgAAAAAAAAAQAMAIgAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\ShiftDefinition.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="ScheduledShift" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.Venue">
     <Position X="11" Y="1" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAABAAAAAECACAAQAEAIAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAACAAAAAABAAAAAACACAAQAAAIAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\Venue.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="Department" />
-      <Property Name="ScheduledShift" />
-      <Property Name="Role" />
-    </ShowAsAssociation>
   </Class>
   <Class Name="Turnus.Models.VenueStaffingRequirement">
     <Position X="5.5" Y="11" Width="1.5" />
@@ -284,12 +254,9 @@
   <Class Name="Turnus.Models.WorkspaceMember">
     <Position X="21" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAABAAAAAAJAAAAAEAAAAQgAAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAABAAAAAAJAAAAAEAAAAAgAAAIAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\WorkspaceMember.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Property Name="WorkspaceRole" />
-    </ShowAsAssociation>
   </Class>
   <Enum Name="Turnus.Models.WorkspaceRole" Collapsed="true">
     <Position X="25.5" Y="0.5" Width="1.5" />
